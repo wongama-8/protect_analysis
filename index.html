@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Protection Analysis Tool</title>
+    <title>Coverage Analysis Tool</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -28,23 +28,23 @@
             font-size: 0.875rem;
             font-weight: 500;
         }
-        .input-group input {
+        .input-group input, .input-group select { /* Added select here */
             border-color: #cbd5e1;
             transition: all 0.2s ease-in-out;
         }
-        .input-group input:focus {
+        .input-group input:focus, .input-group select:focus { /* Added select here */
             outline: none;
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+            border-color: #6366f1; /* Softer indigo for focus */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); /* Softer shadow */
         }
         .btn-primary {
-            background-image: linear-gradient(to right, #4f46e5, #6366f1);
+            background-image: linear-gradient(to right, #6366f1, #818cf8); /* Softer indigo gradient */
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px -1px rgba(79, 70, 229, 0.25);
+            box-shadow: 0 4px 15px -1px rgba(99, 102, 241, 0.25); /* Softer shadow */
         }
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 7px 20px -2px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 7px 20px -2px rgba(99, 102, 241, 0.3); /* Softer hover shadow */
         }
         .section-header {
             display: flex;
@@ -60,6 +60,7 @@
         .section-header svg {
             width: 1.5rem;
             height: 1.5rem;
+            color: #64748b; /* Neutral slate color for icons */
         }
         .spotlight-card {
             background-color: white;
@@ -75,6 +76,20 @@
              transform: translateY(-4px);
              box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
+        /* Specific styles for coverage status cards */
+        .spotlight-card.coverage-achieved {
+            background-color: #f0fdf4; /* Light green background */
+            border-color: #bbf7d0; /* Green border */
+        }
+        .spotlight-card.coverage-needed {
+            background-color: #fffbeb; /* Light amber background */
+            border-color: #fcd34d; /* Amber border */
+        }
+        .spotlight-card.coverage-deferred { /* New style for "Not in Current Plan" */
+            background-color: #f8fafc; /* Very light gray/neutral */
+            border-color: #e2e8f0; /* Light gray border */
+        }
+
         .value-card {
             background: linear-gradient(135deg, #f5f3ff, #faf5ff);
             border: 1px solid #ddd6fe;
@@ -88,10 +103,53 @@
             border-radius: 0.75rem;
             padding: 1.5rem;
             transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center; /* Keep items vertically centered */
         }
         .breakdown-list-item.goal-achieved {
             background-color: #f0fdf4;
             border: 1px solid #bbf7d0;
+        }
+        /* Styles for the new combined coverage overview */
+        .individual-coverage-item {
+            background-color: white;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            overflow: hidden; /* Ensures content doesn't spill on toggle */
+        }
+        .individual-coverage-item:hover {
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+        .individual-coverage-item.coverage-achieved {
+            background-color: #f0fdf4; /* Light green background */
+            border-color: #bbf7d0; /* Green border */
+        }
+        .individual-coverage-item.coverage-needed {
+            background-color: #fffbeb; /* Light amber background */
+            border-color: #fcd34d; /* Amber border */
+        }
+        .individual-coverage-item.coverage-deferred { /* New style for "Not in Current Plan" */
+            background-color: #f8fafc; /* Very light gray/neutral */
+            border-color: #e2e8f0; /* Light gray border */
+        }
+        .summary-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .detailed-breakdown-content {
+            max-height: 0;
+            opacity: 0;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+        }
+        .detailed-breakdown-content.expanded {
+            max-height: 500px; /* Arbitrary large value to allow expansion */
+            opacity: 1;
+            transition: max-height 0.5s ease-in, opacity 0.5s ease-in;
         }
     </style>
 </head>
@@ -100,7 +158,7 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-screen-xl">
         <!-- Header -->
         <header class="text-center mb-12">
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900">Protection Analysis</h1>
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900">Coverage Analysis</h1>
             <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">A personalized look at your financial safety net.</p>
         </header>
 
@@ -108,29 +166,31 @@
             <!-- Left Column: Inputs -->
             <div class="lg:col-span-4">
                 <div class="card space-y-8">
-                    <!-- Step 1-3 Inputs -->
+                    <!-- Client Details -->
                     <div>
                         <div class="section-header">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
-                            <h2>Client Details</h2>
+                            <h2>Details</h2>
                         </div>
                         <div class="input-group">
-                            <label for="annualIncome" class="block mb-2">Client's Annual Income (RM)</label>
+                            <label for="annualIncome" class="block mb-2">Annual Income (RM)</label>
                             <input type="number" id="annualIncome" class="w-full p-2.5 border rounded-lg" placeholder="e.g., 120000">
                         </div>
                     </div>
+                    <!-- Coverage Benchmarks -->
                     <div>
                         <div class="section-header">
                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" /></svg>
-                            <h3>Protection Benchmarks</h3>
+                            <h3>Coverage Benchmarks</h3>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="input-group"><label for="ruleLife">Life (x Income)</label><input type="number" id="ruleLife" class="w-full p-2.5 border rounded-lg" placeholder="e.g., 5"></div>
                             <div class="input-group"><label for="ruleCi">CI (x Income)</label><input type="number" id="ruleCi" class="w-full p-2.5 border rounded-lg" placeholder="e.g., 3"></div>
-                            <div class="input-group"><label for="ruleAd">Accident (x Income)</label><input type="number" id="ruleAd" class="w-full p-2.5 border rounded-lg" placeholder="e.g., 5"></div>
-                            <div class="input-group"><label for="ruleMed">Medical (RM)</label><input type="number" id="ruleMed" class="w-full p-2.5 border rounded-lg" placeholder="e.g., 1000000"></div>
+                            <div class="input-group"><label for="ruleAd">Accidental (x Income)</label><input type="number" id="ruleAd" class="w-full p-2.5 border rounded-lg" placeholder="e.g., 5"></div>
+                            <div class="input-group"><label for="ruleMed">Health/Medical (RM)</label><input type="number" id="ruleMed" class="w-full p-2.5 border rounded-lg" placeholder="e.g., 1000000"></div>
                         </div>
                     </div>
+                    <!-- Existing Coverage -->
                     <div>
                         <div class="section-header">
                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286zm0 13.036h.008v.008h-.008v-.008z" /></svg>
@@ -139,15 +199,15 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div class="input-group"><label for="lifeInsurance">Life Insurance</label><input type="number" id="lifeInsurance" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
                             <div class="input-group"><label for="criticalIllness">Critical Illness</label><input type="number" id="criticalIllness" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
-                            <div class="input-group"><label for="accidentalDeath">Accidental Death</label><input type="number" id="accidentalDeath" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
-                            <div class="input-group"><label for="medical">Medical</label><input type="number" id="medical" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
+                            <div class="input-group"><label for="accidentalDeath">Accidental</label><input type="number" id="accidentalDeath" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
+                            <div class="input-group"><label for="medical">Health/Medical</label><input type="number" id="medical" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
                         </div>
                     </div>
-                    <!-- Step 4: Proposed Plan -->
+                    <!-- Proposed Plan -->
                     <div id="proposedSection" class="disabled-section">
                         <div class="section-header text-emerald-600">
                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            <h3>Your New Plan (Proposed)</h3>
+                            <h3>Your New Plan</h3>
                         </div>
                          <div class="grid grid-cols-2 gap-4">
                             <div class="input-group"><label for="proposedLife">Life Insurance</label><input type="number" id="proposedLife" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
@@ -155,50 +215,44 @@
                             <div class="input-group"><label for="proposedAd">Accidental Death</label><input type="number" id="proposedAd" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
                             <div class="input-group"><label for="proposedMed">Medical</label><input type="number" id="proposedMed" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
                         </div>
-                         <div class="input-group mt-4">
-                            <label for="proposedPremium" class="block mb-2">Proposed Monthly Premium (RM)</label>
-                            <input type="number" id="proposedPremium" class="w-full p-2.5 border rounded-lg" placeholder="0">
+                        <div class="input-group mt-4">
+                            <label for="proposedPremiumAmount" class="block mb-2">Proposed Premium</label>
+                            <div class="flex gap-2">
+                                <input type="number" id="proposedPremiumAmount" class="w-full p-2.5 border rounded-lg" placeholder="0">
+                                <select id="proposedPremiumFrequency" class="p-2.5 border rounded-lg">
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly">Quarterly</option>
+                                    <option value="half-yearly">Half-Yearly</option>
+                                    <option value="annually">Annually</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <button id="updateButton" class="w-full btn-primary text-white font-bold py-3 px-4 rounded-lg text-lg mt-4">Analyze Protection Gap</button>
+                    <button id="updateButton" class="w-full btn-primary text-white font-bold py-3 px-4 rounded-lg text-lg mt-4">Analyze Coverage Gap</button>
                 </div>
             </div>
 
             <!-- Right Column: Outputs -->
             <div class="lg:col-span-8 space-y-8">
-                <!-- Summary Cards -->
-                <div id="summaryCard" class="card hidden">
-                     <div class="flex justify-between items-center mb-6">
-                        <h2 id="summaryTitle" class="text-2xl font-bold text-slate-700">Your Protection Summary</h2>
-                    </div>
-                    <div id="summaryCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <!-- Summary Cards will be injected here -->
-                    </div>
+                <!-- Monthly/Annual/Quarterly/Half-Yearly Investment Card -->
+                <div id="monthlyInvestmentCard" class="card value-card hidden">
+                    <h2 id="monthlyInvestmentTitle" class="text-2xl font-bold text-slate-700 text-center mb-4">Your Monthly Investment</h2>
+                    <p id="valuePremium" class="text-5xl font-extrabold text-indigo-600 text-center"></p>
                 </div>
 
-                <!-- Value Proposition Card -->
-                <div id="valueCard" class="card value-card hidden">
-                    <h2 class="text-2xl font-bold text-slate-700 text-center mb-4">Your Plan's Value</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center text-center">
-                        <div>
-                            <p class="text-lg font-medium text-slate-600">Your Monthly Investment</p>
-                            <p id="valuePremium" class="text-4xl font-extrabold text-indigo-600"></p>
-                        </div>
-                        <div class="text-2xl font-light text-slate-400 hidden md:block self-center">→</div>
-                        <div class="text-left">
-                            <p class="text-lg font-medium text-slate-600">Your Protection Breakdown</p>
-                            <div id="valueProtectionBreakdown" class="mt-2 text-slate-800 font-semibold space-y-1"></div>
-                            <hr class="my-2 border-slate-300">
-                            <p id="valueProtectionTotal" class="text-xl font-bold text-slate-900"></p>
-                        </div>
-                    </div>
+                <!-- Coverage Breakdown Card (Total Proposed Coverage) -->
+                <div id="protectionBreakdownCard" class="card value-card hidden">
+                    <h2 class="text-2xl font-bold text-slate-700 text-center mb-4">Your Coverage Breakdown</h2>
+                    <div id="valueProtectionBreakdown" class="mt-2 text-slate-800 font-semibold space-y-2"></div>
+                    <hr class="my-2 border-slate-300">
+                    <p id="valueProtectionTotal" class="text-2xl font-extrabold text-indigo-700 mt-2 text-center"></p>
                 </div>
 
-                <!-- Summary Table -->
-                <div id="breakdownCard" class="card hidden">
-                    <h2 class="text-xl font-bold mb-4 text-slate-700">Detailed Breakdown</h2>
-                    <div id="breakdownListContainer" class="space-y-2">
-                        <!-- Breakdown list items will be injected here -->
+                <!-- New Combined Coverage Overview Card -->
+                <div id="coverageOverviewCard" class="card hidden">
+                    <h2 class="text-2xl font-bold text-slate-700 mb-6">Your Coverage Overview</h2>
+                    <div id="combinedCoverageList" class="space-y-4">
+                        <!-- Individual expandable coverage items will be injected here -->
                     </div>
                 </div>
             </div>
@@ -208,24 +262,46 @@
     <script>
         const annualIncomeEl = document.getElementById('annualIncome');
         const updateButton = document.getElementById('updateButton');
-        const summaryCardsContainer = document.getElementById('summaryCardsContainer');
         const proposedSection = document.getElementById('proposedSection');
-        const valueCard = document.getElementById('valueCard');
-        const breakdownCard = document.getElementById('breakdownCard');
-        const breakdownListContainer = document.getElementById('breakdownListContainer');
-        const summaryCard = document.getElementById('summaryCard');
-        const summaryTitle = document.getElementById('summaryTitle');
         
-        let hasAnalyzedGap = false;
+        // Updated card references
+        const monthlyInvestmentCard = document.getElementById('monthlyInvestmentCard');
+        const monthlyInvestmentTitle = document.getElementById('monthlyInvestmentTitle'); 
+        const protectionBreakdownCard = document.getElementById('protectionBreakdownCard');
+        const coverageOverviewCard = document.getElementById('coverageOverviewCard'); 
+        const combinedCoverageList = document.getElementById('combinedCoverageList'); 
+
+        // New premium input elements
+        const proposedLifeEl = document.getElementById('proposedLife');
+        const proposedCiEl = document.getElementById('proposedCi');
+        const proposedAdEl = document.getElementById('proposedAd');
+        const proposedMedEl = document.getElementById('proposedMed');
+        const proposedPremiumAmountEl = document.getElementById('proposedPremiumAmount');
+        const proposedPremiumFrequencyEl = document.getElementById('proposedPremiumFrequency');
+        
+        let hasAnalyzedGap = false; // True if the *current display* is a result of a completed analysis
 
         const inputs = {
             rules: { life: document.getElementById('ruleLife'), ci: document.getElementById('ruleCi'), ad: document.getElementById('ruleAd'), med: document.getElementById('ruleMed') },
             existing: { life: document.getElementById('lifeInsurance'), ci: document.getElementById('criticalIllness'), ad: document.getElementById('accidentalDeath'), med: document.getElementById('medical') },
-            proposed: { life: document.getElementById('proposedLife'), ci: document.getElementById('proposedCi'), ad: document.getElementById('proposedAd'), med: document.getElementById('proposedMed') },
-            premium: document.getElementById('proposedPremium')
+            proposed: { 
+                life: proposedLifeEl, 
+                ci: proposedCiEl, 
+                ad: proposedAdEl, 
+                med: proposedMedEl 
+            },
         };
         
-        const allInputs = document.querySelectorAll('#annualIncome, #ruleLife, #ruleCi, #ruleAd, #ruleMed, #lifeInsurance, #criticalIllness, #accidentalDeath, #medical');
+        // Define inputs that trigger a *full reset* (disabling proposed section)
+        const initialInputsTriggerReset = document.querySelectorAll(
+            '#annualIncome, #ruleLife, #ruleCi, #ruleAd, #ruleMed, #lifeInsurance, #criticalIllness, #accidentalDeath, #medical'
+        );
+
+        // Define proposed plan inputs that *only* change button text (keep proposed section enabled)
+        const proposedPlanInputsTriggerUpdate = document.querySelectorAll(
+            '#proposedLife, #proposedCi, #proposedAd, #proposedMed, #proposedPremiumAmount'
+        );
+
 
         const formatCurrency = (value) => `RM ${Math.round(value).toLocaleString('en-US')}`;
 
@@ -249,6 +325,27 @@
                 totalNewProtection += proposed[key];
             });
 
+            const proposedPremiumAmount = parseFloat(proposedPremiumAmountEl.value) || 0;
+            const proposedPremiumFrequency = proposedPremiumFrequencyEl.value;
+
+            let monthlyEquivalentPremium = 0;
+            switch (proposedPremiumFrequency) {
+                case 'annually':
+                    monthlyEquivalentPremium = proposedPremiumAmount / 12;
+                    break;
+                case 'half-yearly':
+                    monthlyEquivalentPremium = proposedPremiumAmount / 6;
+                    break;
+                case 'quarterly':
+                    monthlyEquivalentPremium = proposedPremiumAmount / 3;
+                    break;
+                case 'monthly':
+                default:
+                    monthlyEquivalentPremium = proposedPremiumAmount;
+                    break;
+            }
+
+
             recommended.life = income * rules.life;
             recommended.ci = income * rules.ci;
             recommended.ad = income * rules.ad;
@@ -259,200 +356,297 @@
                 finalGap[key] = Math.max(0, recommended[key] - newTotal[key]);
             });
 
-            const proposedPremium = parseFloat(inputs.premium.value) || 0;
-
-            return { existing, proposed, newTotal, recommended, initialGap, finalGap, proposedPremium, totalNewProtection };
+            return { 
+                existing, proposed, newTotal, recommended, initialGap, finalGap, 
+                proposedPremiumAmount, proposedPremiumFrequency, totalNewProtection,
+                monthlyEquivalentPremium 
+            };
         }
         
         function updateView(isSolutionView) {
              if (isSolutionView) {
-                valueCard.classList.remove('hidden');
-                breakdownCard.classList.remove('hidden');
-                summaryTitle.textContent = 'Your Protection Summary';
+                monthlyInvestmentCard.classList.remove('hidden');
+                protectionBreakdownCard.classList.remove('hidden');
+                coverageOverviewCard.classList.remove('hidden');
             } else {
-                valueCard.classList.add('hidden');
-                breakdownCard.classList.add('hidden');
-                summaryTitle.textContent = 'Your Current Protection Gap';
+                monthlyInvestmentCard.classList.add('hidden');
+                protectionBreakdownCard.classList.add('hidden');
+                coverageOverviewCard.classList.remove('hidden'); 
             }
         }
 
-        function updateValueCard({ proposed, proposedPremium, totalNewProtection }) {
-            document.getElementById('valuePremium').textContent = formatCurrency(proposedPremium);
+        function updateValueCard(analysis) { 
+            const { proposedPremiumAmount, proposedPremiumFrequency, totalNewProtection, proposed } = analysis;
+
+            let frequencyTitle = '';
+            switch (proposedPremiumFrequency) {
+                case 'annually':
+                    frequencyTitle = 'Your Annual Investment';
+                    break;
+                case 'half-yearly':
+                    frequencyTitle = 'Your Half-Yearly Investment';
+                    break;
+                case 'quarterly':
+                    frequencyTitle = 'Your Quarterly Investment';
+                    break;
+                case 'monthly':
+                default:
+                    frequencyTitle = 'Your Monthly Investment';
+                    break;
+            }
+            monthlyInvestmentTitle.textContent = frequencyTitle;
+            document.getElementById('valuePremium').textContent = formatCurrency(proposedPremiumAmount);
+
             const breakdownEl = document.getElementById('valueProtectionBreakdown');
             breakdownEl.innerHTML = '';
-            const names = {life: 'Life Insurance', ci: 'Critical Illness', ad: 'Accidental Death', med: 'Medical'};
+            const names = {life: 'Life Insurance', ci: 'Critical Illness', ad: 'Accidental Death', med: 'Health/Medical'}; 
             Object.keys(proposed).forEach(key => {
                 if (proposed[key] > 0) {
-                    breakdownEl.innerHTML += `<div><span>${names[key]}:</span> <span class="font-bold">${formatCurrency(proposed[key])}</span></div>`;
+                    breakdownEl.innerHTML += `
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-600">${names[key]}:</span>
+                            <span class="font-bold text-slate-800">${formatCurrency(proposed[key])}</span>
+                        </div>
+                    `;
                 }
             });
-            document.getElementById('valueProtectionTotal').textContent = `Total Secured: ${formatCurrency(totalNewProtection)}`;
+            document.getElementById('valueProtectionTotal').textContent = `Total Coverage: ${formatCurrency(totalNewProtection)}`;
         }
 
-        function updateBreakdownList({ existing, proposed, newTotal, recommended }, isSolutionView) {
-            breakdownListContainer.innerHTML = '';
-            const keys = ['life', 'ci', 'ad', 'med'];
-            const names = ['Life Insurance', 'Critical Illness', 'Accidental Death', 'Medical'];
-
-            names.forEach((name, index) => {
-                const key = keys[index];
-                const total = newTotal[key];
-                const shortfall = recommended[key] - total;
-                const isGoalMet = shortfall <= 0;
-                
-                let statusHTML = '';
-                if (isGoalMet) {
-                    statusHTML = `<div class="text-emerald-500 text-3xl">✔</div>`;
-                } else {
-                    statusHTML = `<div class="text-indigo-500 text-3xl">◆</div>`;
-                }
-
-                const buildUpHTML = `
-                    <div class="text-slate-600 text-sm">
-                        ${formatCurrency(existing[key])} <span class="text-slate-400">(Current)</span> + 
-                        <span class="text-emerald-600 font-semibold">${formatCurrency(proposed[key])}</span> <span class="text-slate-400">(New Plan)</span>
-                    </div>
-                `;
-
-                const row = `
-                    <div class="breakdown-list-item ${isGoalMet ? 'goal-achieved' : ''}">
-                        <div>
-                            <p class="font-bold text-slate-800 text-lg">${name}</p>
-                            <p class="text-sm text-slate-500">Benchmark: ${formatCurrency(recommended[key])}</p>
-                        </div>
-                        <div class="text-right">
-                            ${buildUpHTML}
-                            <p class="text-2xl font-bold text-slate-900 mt-1">= ${formatCurrency(total)}</p>
-                        </div>
-                        <div class="w-10 text-center">${statusHTML}</div>
-                    </div>
-                `;
-                if(isSolutionView) {
-                    breakdownListContainer.innerHTML += row;
-                }
-            });
-        }
-        
-        function createOrUpdateSummaryCards(analysis, isSolutionView) {
+        function updateCoverageOverview(analysis, isSolutionView) {
             const { existing, proposed, newTotal, recommended, initialGap, finalGap } = analysis;
             const keys = ['life', 'ci', 'ad', 'med'];
             const names = [
-                { title: 'Life', subtitle: 'A Legacy of Protection'},
-                { title: 'Critical Illness', subtitle: 'Financial Relief'},
-                { title: 'Accidental', subtitle: 'Against the Unexpected'},
-                { title: 'Health/Medical', subtitle: 'Shield Against Costs'}
+                { title: 'Life', subtitle: 'A legacy coverage to help your loved ones secure the future'},
+                { title: 'Critical Illness', subtitle: 'Protecting your future when you need it most'},
+                { title: 'Accidental', subtitle: 'Your shield against life\'s unexpected turns'},
+                { title: 'Health/Medical', subtitle: 'Empowering your health, securing your recovery'}
             ];
-            
-            if (summaryCardsContainer.children.length === 0) {
-                keys.forEach((key, index) => {
-                    const cardHTML = `
-                        <div id="card-${key}" class="spotlight-card">
-                            <div class="flex items-center gap-3 text-left">
-                                <span id="icon-${key}" class="text-3xl"></span>
-                                <div>
-                                    <h3 class="text-xl font-bold text-slate-800 leading-tight">${names[index].title}</h3>
-                                    <p class="text-sm text-slate-500 font-medium">${names[index].subtitle}</p>
-                                </div>
-                            </div>
-                            <div id="spotlight-content-${key}" class="flex-grow my-4">
-                                <!-- Spotlight content is injected here -->
-                            </div>
-                        </div>
-                    `;
-                    summaryCardsContainer.innerHTML += cardHTML;
-                });
-            }
+            const icons = ['👨‍👩‍👧‍👦', '❤️‍🩹', '☂️', '🛡️'];
 
-            keys.forEach((key, index) => {
+            let coverageItems = keys.map((key, index) => {
                 const rec = recommended[key];
                 const ex = existing[key];
                 const total = newTotal[key];
-                
-                const iconEl = document.getElementById(`icon-${key}`);
-                const icons = ['👨‍👩‍👧‍👦', '❤️‍🩹', '☂️', '🛡️'];
-                iconEl.textContent = icons[index];
+                const prop = proposed[key]; 
 
-                const spotlightContent = document.getElementById(`spotlight-content-${key}`);
+                let statusText = '';
+                let statusAmount = 0;
+                let cardStatusClass = '';
+                let isGoalMet = false;
+                let summaryDetailsHTML = ''; 
+                let currentDetailedContentHTML = ''; 
 
                 if (isSolutionView) {
-                    if (total >= rec) { // Celebration Card
-                        spotlightContent.innerHTML = `
-                            <div class="flex flex-col items-center justify-center h-full">
-                                <div class="text-5xl text-emerald-500">✔</div>
-                                <div class="text-xl font-bold text-emerald-700 mt-2">Benchmark Achieved!</div>
-                                <p class="text-sm text-slate-500 mt-2">Your Total: <b>${formatCurrency(total)}</b> | Benchmark: <b>${formatCurrency(rec)}</b></p>
-                            </div>
-                        `;
-                    } else { // Next Milestone Card
-                         spotlightContent.innerHTML = `
-                            <p class="text-base font-semibold text-indigo-700">Next Milestone</p>
-                            <p class="text-4xl font-extrabold text-indigo-600">${formatCurrency(finalGap[key])}</p>
-                            <p class="text-base text-slate-500 mt-4">You have secured <b>${formatCurrency(total)}</b> of your <b>${formatCurrency(rec)}</b> benchmark.</p>
-                        `;
+                    isGoalMet = (total >= rec);
+                    if (isGoalMet) {
+                        statusText = 'Benchmark Achieved!';
+                        statusAmount = total; 
+                        cardStatusClass = 'coverage-achieved';
+                    } else if (prop > 0) { 
+                        statusText = 'New Total Coverage'; 
+                        statusAmount = newTotal[key]; 
+                        cardStatusClass = 'coverage-needed'; 
+                    } else { 
+                        statusText = 'Not in Current Plan';
+                        statusAmount = initialGap[key]; 
+                        cardStatusClass = 'coverage-deferred'; 
                     }
-                } else { // Gap View
-                    if (initialGap[key] > 0) { // Shortfall Card
-                         spotlightContent.innerHTML = `
-                            <p class="text-base font-semibold text-rose-700">Protection Shortfall</p>
-                            <p class="text-4xl font-extrabold text-rose-600">${formatCurrency(initialGap[key])}</p>
-                            <p class="text-base text-slate-500 mt-4">You currently have <b>${formatCurrency(ex)}</b> of the recommended <b>${formatCurrency(rec)}</b> benchmark.</p>
-                        `;
-                    } else { // Benchmark Achieved Card (Before)
-                        spotlightContent.innerHTML = `
-                            <div class="flex flex-col items-center justify-center h-full">
-                                <div class="text-5xl text-emerald-500">✔</div>
-                                <div class="text-xl font-bold text-emerald-700 mt-2">Benchmark Achieved!</div>
-                                <p class="text-sm text-slate-500 mt-2">Your Total: <b>${formatCurrency(ex)}</b> | Benchmark: <b>${formatCurrency(rec)}</b></p>
+
+                    currentDetailedContentHTML = `
+                        <div class="mt-4 pt-4 border-t border-slate-200">
+                            <div class="flex justify-between items-center py-1">
+                                <span class="text-slate-600">Current Coverage:</span>
+                                <span class="font-bold text-slate-800">${formatCurrency(existing[key])}</span>
                             </div>
-                        `;
+                            <div class="flex justify-between items-center py-1">
+                                <span class="text-slate-600">New Plan:</span>
+                                <span class="font-bold text-emerald-600">${formatCurrency(proposed[key])}</span>
+                            </div>
+                            <hr class="my-2 border-slate-300">
+                            <div class="flex justify-between items-center py-1">
+                                <span class="font-bold text-slate-800">Total New Coverage:</span>
+                                <span class="text-xl font-bold text-slate-900">${formatCurrency(newTotal[key])}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1 mt-2">
+                                <span class="text-sm text-slate-500">Benchmark:</span>
+                                <span class="text-sm text-slate-500">${formatCurrency(recommended[key])}</span>
+                            </div>
+                            ${finalGap[key] > 0 ? `
+                            <div class="flex justify-between items-center py-1 text-red-600 font-semibold">
+                                <span>Remaining Gap:</span>
+                                <span>${formatCurrency(finalGap[key])}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+
+                } else {
+                    isGoalMet = (ex >= rec);
+                    if (isGoalMet) {
+                        statusText = 'Benchmark Achieved!';
+                        statusAmount = ex; 
+                        cardStatusClass = 'coverage-achieved';
+                    } else {
+                        statusText = 'Coverage Gap'; 
+                        statusAmount = initialGap[key];
+                        cardStatusClass = 'coverage-needed';
                     }
+
+                    summaryDetailsHTML = `
+                        <p class="text-sm text-slate-600 mt-1">
+                            Current: <span class="font-semibold">${formatCurrency(existing[key])}</span> | Benchmark: <span class="font-semibold">${formatCurrency(recommended[key])}</span>
+                        </p>
+                    `;
+
+                    currentDetailedContentHTML = `
+                        <div class="mt-4 pt-4 border-t border-slate-200">
+                            <div class="flex justify-between items-center py-1">
+                                <span class="text-slate-600">Current Coverage:</span>
+                                <span class="font-bold text-slate-800">${formatCurrency(existing[key])}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1 mt-2">
+                                <span class="text-sm text-slate-500">Benchmark:</span>
+                                <span class="text-sm text-slate-500">${formatCurrency(recommended[key])}</span>
+                            </div>
+                            ${initialGap[key] > 0 ? `
+                            <div class="flex justify-between items-center py-1 text-red-600 font-semibold">
+                                <span>Coverage Gap:</span>
+                                <span>${formatCurrency(initialGap[key])}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
                 }
+
+                return {
+                    key,
+                    name: names[index].title,
+                    subtitle: names[index].subtitle,
+                    icon: icons[index],
+                    statusText,
+                    statusAmount,
+                    cardStatusClass,
+                    summaryDetailsHTML,
+                    currentDetailedContentHTML,
+                    proposedAmount: prop 
+                };
+            });
+
+            if (isSolutionView) {
+                coverageItems.sort((a, b) => {
+                    if (a.proposedAmount > 0 && b.proposedAmount === 0) return -1;
+                    if (a.proposedAmount === 0 && b.proposedAmount > 0) return 1;
+                    return 0;
+                });
+            }
+
+            combinedCoverageList.innerHTML = ''; 
+            coverageItems.forEach(item => {
+                const itemHTML = `
+                    <div class="individual-coverage-item ${item.cardStatusClass}" data-key="${item.key}">
+                        <div class="summary-header">
+                            <span class="text-3xl">${item.icon}</span>
+                            <div class="text-left flex-grow">
+                                <h3 class="text-xl font-bold text-slate-800 leading-tight">${item.name}</h3>
+                                <p class="text-sm text-slate-500 font-medium">${item.subtitle}</p>
+                                ${item.summaryDetailsHTML} 
+                            </div>
+                            <div class="ml-auto text-right">
+                                <p class="text-base font-semibold ${item.cardStatusClass === 'coverage-achieved' ? 'text-emerald-700' : (item.cardStatusClass === 'coverage-needed' ? 'text-amber-700' : 'text-slate-500')}">${item.statusText}</p>
+                                <p class="text-4xl font-extrabold ${item.cardStatusClass === 'coverage-achieved' ? 'text-emerald-600' : (item.cardStatusClass === 'coverage-needed' ? 'text-amber-600' : 'text-slate-700')}">${formatCurrency(item.statusAmount)}</p>
+                            </div>
+                        </div>
+                        <div class="detailed-breakdown-content">
+                            ${item.currentDetailedContentHTML} 
+                        </div>
+                    </div>
+                `;
+                combinedCoverageList.innerHTML += itemHTML;
+            });
+
+            document.querySelectorAll('.individual-coverage-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const content = this.querySelector('.detailed-breakdown-content');
+                    content.classList.toggle('expanded');
+                });
             });
         }
 
         updateButton.addEventListener('click', () => {
-            summaryCard.classList.remove('hidden');
-            
-            if (hasAnalyzedGap) {
-                // This is the "Update with Solution" click
-                runAnalysis(true);
-            } else {
-                // This is the "Analyze Protection Gap" click
-                runAnalysis(false);
-                hasAnalyzedGap = true;
-                proposedSection.classList.remove('disabled-section');
+            if (updateButton.textContent === 'Analyze Coverage Gap') {
+                // If it's the first time running analysis OR inputs have changed
+                const isInitialRun = proposedSection.classList.contains('disabled-section');
+
+                if (isInitialRun) {
+                    // First time: run initial gap analysis, then enable proposed section
+                    runAnalysis(false);
+                    proposedSection.classList.remove('disabled-section'); // Enable
+                } else {
+                    // Inputs (either initial or proposed) have changed, re-run solution analysis
+                    runAnalysis(true);
+                    // proposedSection remains enabled
+                }
+                hasAnalyzedGap = true; // Analysis is now current
                 updateButton.textContent = 'Update With Solution';
+            } else {
+                // Button says "Update With Solution", just re-run solution analysis
+                runAnalysis(true);
+                // State remains hasAnalyzedGap = true, proposedSection enabled, button text "Update With Solution"
             }
         });
 
         function setupReAnalysisTriggers() {
-            allInputs.forEach(input => {
+            // Monitor initial inputs for changes that cause a full reset (disabling proposed section)
+            initialInputsTriggerReset.forEach(input => {
                 input.addEventListener('input', () => {
-                    if (hasAnalyzedGap) {
-                        hasAnalyzedGap = false;
-                        proposedSection.classList.add('disabled-section');
-                        updateButton.textContent = 'Analyze Protection Gap';
+                    if (hasAnalyzedGap) { // Only trigger reset if an analysis was previously current
+                        hasAnalyzedGap = false; 
+                        proposedSection.classList.add('disabled-section'); // Re-disable proposed section
+                        updateButton.textContent = 'Analyze Coverage Gap'; 
                     }
                 });
+            });
+
+            // Monitor proposed plan inputs and frequency for changes that require re-running analysis
+            // These changes should NOT disable the proposed section
+            proposedPlanInputsTriggerUpdate.forEach(input => {
+                input.addEventListener('input', () => {
+                    if (hasAnalyzedGap) { // Only change button text if analysis was previously current
+                        hasAnalyzedGap = false; // Indicate analysis is no longer current
+                        updateButton.textContent = 'Analyze Coverage Gap';
+                    }
+                });
+            });
+
+            proposedPremiumFrequencyEl.addEventListener('change', () => {
+                if (hasAnalyzedGap) { // Corrected typo: hasAnalyAnalyzedGap -> hasAnalyzedGap
+                    hasAnalyzedGap = false; // Indicate analysis is no longer current
+                    updateButton.textContent = 'Analyze Coverage Gap';
+                }
             });
         }
         
         function runAnalysis(isSolution) {
             const analysis = calculateAnalysis(isSolution);
-            updateView(isSolution);
-            createOrUpdateSummaryCards(analysis, isSolution);
-            updateBreakdownList(analysis, isSolution);
-            if (isSolution) {
-                updateValueCard(analysis);
-            }
+            updateView(isSolution); 
+            updateCoverageOverview(analysis, isSolution); 
+            updateValueCard(analysis); 
         }
 
         window.onload = () => {
-            if (summaryCardsContainer.children.length === 0) {
-                 createOrUpdateSummaryCards(calculateAnalysis(false), false);
-            }
-            summaryCard.classList.add('hidden');
-            breakdownCard.classList.add('hidden');
+            calculateAnalysis(false); 
+
+            monthlyInvestmentCard.classList.add('hidden');
+            protectionBreakdownCard.classList.add('hidden');
+            coverageOverviewCard.classList.add('hidden');
+
+            proposedPremiumFrequencyEl.value = 'monthly';
+
+            hasAnalyzedGap = false; 
+            proposedSection.classList.add('disabled-section'); 
+            updateButton.textContent = 'Analyze Coverage Gap'; 
+
             setupReAnalysisTriggers();
         };
     </script>
