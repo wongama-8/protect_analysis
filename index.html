@@ -3,652 +3,757 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coverage Analysis Tool</title>
+    <title>Insurance Protection Analysis</title>
+    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Inter Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
+            background-color: #f3f4f6;
         }
-        .card {
-            background-color: white;
-            border-radius: 0.75rem;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-            padding: 1.5rem 2rem;
-            transition: all 0.3s ease;
+        .progress-bar-container {
+            position: relative;
+            height: 1.5rem;
+            width: 100%;
+            background-color: #e5e7eb;
+            border-radius: 9999px;
+            overflow: hidden;
         }
-        .card:hover {
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
-            transform: translateY(-2px);
-        }
-        .input-group label {
-            color: #475569;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-        .input-group input, .input-group select { /* Added select here */
-            border-color: #cbd5e1;
-            transition: all 0.2s ease-in-out;
-        }
-        .input-group input:focus, .input-group select:focus { /* Added select here */
-            outline: none;
-            border-color: #6366f1; /* Softer indigo for focus */
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); /* Softer shadow */
-        }
-        .btn-primary {
-            background-image: linear-gradient(to right, #6366f1, #818cf8); /* Softer indigo gradient */
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px -1px rgba(99, 102, 241, 0.25); /* Softer shadow */
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 20px -2px rgba(99, 102, 241, 0.3); /* Softer hover shadow */
-        }
-        .section-header {
+        .progress-bar {
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 9999px;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #1e293b;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 0.75rem;
-            margin-bottom: 1.25rem;
+            justify-content: flex-end;
+            padding-right: 0.5rem;
+            box-sizing: border-box;
         }
-        .section-header svg {
-            width: 1.5rem;
-            height: 1.5rem;
-            color: #64748b; /* Neutral slate color for icons */
+        .benchmark-marker {
+            position: absolute;
+            top: 0;
+            left: 100%;
+            height: 100%;
+            width: 2px;
+            background-color: transparent;
+            transform: translateX(-100%);
+            border-left: 2px dashed #9ca3af;
         }
-        .spotlight-card {
-            background-color: white;
-            border-radius: 0.75rem;
-            border: 1px solid #e2e8f0;
-            padding: 1.5rem;
+        .benchmark-marker::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0%;
+            transform: translate(-50%, -50%);
+            width: 1rem;
+            height: 1rem;
+            background-color: #9ca3af;
+            border-radius: 50%;
+        }
+        .progress-label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: white;
+            white-space: nowrap;
+        }
+        /* New Styles for Two-Bar Comparison */
+        .two-bar-comparison-container {
             display: flex;
             flex-direction: column;
-            text-align: center;
-            transition: all 0.3s ease-in-out;
+            gap: 1rem;
         }
-        .spotlight-card:hover {
-             transform: translateY(-4px);
-             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        }
-        /* Specific styles for coverage status cards */
-        .spotlight-card.coverage-achieved {
-            background-color: #f0fdf4; /* Light green background */
-            border-color: #bbf7d0; /* Green border */
-        }
-        .spotlight-card.coverage-needed {
-            background-color: #fffbeb; /* Light amber background */
-            border-color: #fcd34d; /* Amber border */
-        }
-        .spotlight-card.coverage-deferred { /* New style for "Not in Current Plan" */
-            background-color: #f8fafc; /* Very light gray/neutral */
-            border-color: #e2e8f0; /* Light gray border */
-        }
-
-        .value-card {
-            background: linear-gradient(135deg, #f5f3ff, #faf5ff);
-            border: 1px solid #ddd6fe;
-        }
-        .disabled-section {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-        .breakdown-list-item {
-            background-color: #f8fafc;
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            transition: all 0.2s ease-in-out;
+        .two-bar-comparison-item {
             display: flex;
-            align-items: center; /* Keep items vertically centered */
+            flex-direction: column;
+            gap: 0.5rem;
         }
-        .breakdown-list-item.goal-achieved {
-            background-color: #f0fdf4;
-            border: 1px solid #bbf7d0;
-        }
-        /* Styles for the new combined coverage overview */
-        .individual-coverage-item {
-            background-color: white;
-            border-radius: 0.75rem;
-            border: 1px solid #e2e8f0;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            overflow: hidden; /* Ensures content doesn't spill on toggle */
-        }
-        .individual-coverage-item:hover {
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
-            transform: translateY(-2px);
-        }
-        .individual-coverage-item.coverage-achieved {
-            background-color: #f0fdf4; /* Light green background */
-            border-color: #bbf7d0; /* Green border */
-        }
-        .individual-coverage-item.coverage-needed {
-            background-color: #fffbeb; /* Light amber background */
-            border-color: #fcd34d; /* Amber border */
-        }
-        .individual-coverage-item.coverage-deferred { /* New style for "Not in Current Plan" */
-            background-color: #f8fafc; /* Very light gray/neutral */
-            border-color: #e2e8f0; /* Light gray border */
-        }
-        .summary-header {
+        .two-bar-comparison-bar {
+            height: 2rem;
+            border-radius: 9999px;
+            transition: width 0.5s ease-in-out;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            padding-left: 1rem;
+            color: white;
+            font-weight: bold;
+            font-size: 0.875rem;
         }
-        .detailed-breakdown-content {
-            max-height: 0;
-            opacity: 0;
-            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
-        }
-        .detailed-breakdown-content.expanded {
-            max-height: 500px; /* Arbitrary large value to allow expansion */
-            opacity: 1;
-            transition: max-height 0.5s ease-in, opacity 0.5s ease-in;
+        .two-bar-comparison-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: #4b5563;
         }
     </style>
 </head>
-<body class="text-gray-800">
+<body class="p-4 sm:p-8 md:p-12">
 
-    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-screen-xl">
+    <div class="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl p-6 sm:p-10 md:p-12 lg:p-16">
         <!-- Header -->
-        <header class="text-center mb-12">
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900">Coverage Analysis</h1>
-            <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">A personalized look at your financial safety net.</p>
+        <header class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Protection Analysis Tool</h1>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <!-- Left Column: Inputs -->
-            <div class="lg:col-span-4">
-                <div class="card space-y-8">
-                    <!-- Client Details -->
-                    <div>
-                        <div class="section-header">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
-                            <h2>Details</h2>
+        <!-- Customer Type Toggle -->
+        <div class="mb-8 flex justify-center">
+            <div class="flex items-center space-x-4 p-2 bg-gray-100 rounded-full shadow-inner">
+                <button id="newCustomerBtn" class="px-6 py-2 rounded-full text-white bg-blue-600 font-medium transition-colors duration-200 ease-in-out">
+                    New
+                </button>
+                <button id="existingCustomerBtn" class="px-6 py-2 rounded-full text-gray-600 bg-transparent font-medium transition-colors duration-200 ease-in-out">
+                    Existing
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Form Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <!-- Inputs Section -->
+            <div class="lg:col-span-1 bg-gray-50 p-6 rounded-2xl shadow-inner">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-blue-500"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Client Details
+                </h2>
+                
+                <!-- Annual Income -->
+                <div class="mb-6">
+                    <label for="annualIncome" class="block text-gray-700 font-medium mb-2">Estimate Annual Income (RM)</label>
+                    <input type="number" id="annualIncome" placeholder="e.g., 60000" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200">
+                </div>
+
+                <!-- Benchmarks -->
+                <h3 class="text-xl font-medium text-gray-800 mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-yellow-500"><path d="M12 2L2 7l10 5l10-5l-10-5z"/><path d="M2 17l10 5l10-5"/><path d="M2 12l10 5l10-5"/></svg>
+                    Protection Benchmarks
+                </h3>
+                
+                <div class="space-y-4 mb-6">
+                    <!-- Life Benchmark -->
+                    <div class="flex items-center justify-between">
+                        <label for="lifeMultiplier" class="text-gray-600">Life (x Income)</label>
+                        <input type="number" id="lifeMultiplier" value="5" min="1" class="w-20 px-2 py-1 border rounded-md text-center">
+                    </div>
+                    <!-- CI Benchmark -->
+                    <div class="flex items-center justify-between">
+                        <label for="ciMultiplier" class="text-gray-600">CI (x Income)</label>
+                        <input type="number" id="ciMultiplier" value="3" min="1" class="w-20 px-2 py-1 border rounded-md text-center">
+                    </div>
+                    <!-- Accident Benchmark -->
+                    <div class="flex items-center justify-between">
+                        <label for="accidentMultiplier" class="text-gray-600">Accident (x Income)</label>
+                        <input type="number" id="accidentMultiplier" value="3" min="1" class="w-20 px-2 py-1 border rounded-md text-center">
+                    </div>
+                    <!-- Medical Benchmark -->
+                    <div class="flex items-center justify-between">
+                        <label for="medicalBenchmark" class="text-gray-600">Medical (RM)</label>
+                        <input type="number" id="medicalBenchmark" value="1000000" min="100000" step="100000" class="w-36 px-2 py-1 border rounded-md text-center">
+                    </div>
+                </div>
+
+                <!-- Existing Policy Section (conditionally displayed) -->
+                <div id="existingPolicySection" class="hidden">
+                    <h3 class="text-xl font-medium text-gray-800 mb-4 mt-6 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-green-500"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Existing Policy Coverage (RM)
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <label for="existingLife" class="text-gray-600">Life Insurance</label>
+                            <input type="number" id="existingLife" placeholder="e.g., 100000" class="w-36 px-2 py-1 border rounded-md text-center">
                         </div>
-                        <div class="input-group">
-                            <label for="annualIncome" class="block mb-2">Annual Income (RM)</label>
-                            <input type="number" id="annualIncome" class="w-full p-2.5 border rounded-lg" placeholder="e.g., 120000">
+                        <div class="flex items-center justify-between">
+                            <label for="existingCI" class="text-gray-600">Critical Illness</label>
+                            <input type="number" id="existingCI" placeholder="e.g., 50000" class="w-36 px-2 py-1 border rounded-md text-center">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label for="existingAccident" class="text-gray-600">Accidental</label>
+                            <input type="number" id="existingAccident" placeholder="e.g., 50000" class="w-36 px-2 py-1 border rounded-md text-center">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label for="existingMedical" class="text-gray-600">Health/Medical</label>
+                            <input type="number" id="existingMedical" placeholder="e.g., 200000" class="w-36 px-2 py-1 border rounded-md text-center">
                         </div>
                     </div>
-                    <!-- Coverage Benchmarks -->
-                    <div>
-                        <div class="section-header">
-                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" /></svg>
-                            <h3>Coverage Benchmarks</h3>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="input-group"><label for="ruleLife">Life (x Income)</label><input type="number" id="ruleLife" class="w-full p-2.5 border rounded-lg" placeholder="e.g., 5"></div>
-                            <div class="input-group"><label for="ruleCi">CI (x Income)</label><input type="number" id="ruleCi" class="w-full p-2.5 border rounded-lg" placeholder="e.g., 3"></div>
-                            <div class="input-group"><label for="ruleAd">Accidental (x Income)</label><input type="number" id="ruleAd" class="w-full p-2.5 border rounded-lg" placeholder="e.g., 5"></div>
-                            <div class="input-group"><label for="ruleMed">Health/Medical (RM)</label><input type="number" id="ruleMed" class="w-full p-2.5 border rounded-lg" placeholder="e.g., 1000000"></div>
-                        </div>
-                    </div>
-                    <!-- Existing Coverage -->
-                    <div>
-                        <div class="section-header">
-                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286zm0 13.036h.008v.008h-.008v-.008z" /></svg>
-                            <h3>Existing Coverage (RM)</h3>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="input-group"><label for="lifeInsurance">Life Insurance</label><input type="number" id="lifeInsurance" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
-                            <div class="input-group"><label for="criticalIllness">Critical Illness</label><input type="number" id="criticalIllness" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
-                            <div class="input-group"><label for="accidentalDeath">Accidental</label><input type="number" id="accidentalDeath" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
-                            <div class="input-group"><label for="medical">Health/Medical</label><input type="number" id="medical" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
+                    <div class="mt-6 flex items-center justify-between">
+                        <label for="existingPremium" class="text-gray-600">Existing Premium</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="existingPremium" placeholder="e.g., 1200" class="w-32 px-2 py-1 border rounded-md text-center">
+                            <select id="existingPremiumFrequency" class="px-2 py-1 border rounded-md">
+                                <option value="annually">Annually</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="quarterly">Quarterly</option>
+                                <option value="half-yearly">Half-yearly</option>
+                            </select>
                         </div>
                     </div>
-                    <!-- Proposed Plan -->
-                    <div id="proposedSection" class="disabled-section">
-                        <div class="section-header text-emerald-600">
-                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            <h3>Your New Plan</h3>
-                        </div>
-                         <div class="grid grid-cols-2 gap-4">
-                            <div class="input-group"><label for="proposedLife">Life Insurance</label><input type="number" id="proposedLife" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
-                            <div class="input-group"><label for="proposedCi">Critical Illness</label><input type="number" id="proposedCi" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
-                            <div class="input-group"><label for="proposedAd">Accidental Death</label><input type="number" id="proposedAd" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
-                            <div class="input-group"><label for="proposedMed">Medical</label><input type="number" id="proposedMed" class="w-full p-2.5 border rounded-lg" placeholder="0"></div>
-                        </div>
-                        <div class="input-group mt-4">
-                            <label for="proposedPremiumAmount" class="block mb-2">Proposed Premium</label>
-                            <div class="flex gap-2">
-                                <input type="number" id="proposedPremiumAmount" class="w-full p-2.5 border rounded-lg" placeholder="0">
-                                <select id="proposedPremiumFrequency" class="p-2.5 border rounded-lg">
-                                    <option value="monthly">Monthly</option>
-                                    <option value="quarterly">Quarterly</option>
-                                    <option value="half-yearly">Half-Yearly</option>
-                                    <option value="annually">Annually</option>
-                                </select>
-                            </div>
-                        </div>
+                </div>
+
+                <!-- Proposed Plan -->
+                <h3 class="text-xl font-medium text-gray-800 mb-4 mt-6 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-purple-500"><path d="M4 12V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6"/><path d="M12 18V4"/><path d="M16 12H8"/><path d="M21 16H3"/></svg>
+                    Your Proposed Plan (RM)
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <label for="proposedLife" class="text-gray-600">Life Insurance</label>
+                        <input type="number" id="proposedLife" placeholder="e.g., 100000" class="w-36 px-2 py-1 border rounded-md text-center">
                     </div>
-                    <button id="updateButton" class="w-full btn-primary text-white font-bold py-3 px-4 rounded-lg text-lg mt-4">Analyze Coverage Gap</button>
+                    <div class="flex items-center justify-between">
+                        <label for="proposedCI" class="text-gray-600">Critical Illness</label>
+                        <input type="number" id="proposedCI" placeholder="e.g., 50000" class="w-36 px-2 py-1 border rounded-md text-center">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label for="proposedAccident" class="text-gray-600">Accidental</label>
+                        <input type="number" id="proposedAccident" placeholder="e.g., 50000" class="w-36 px-2 py-1 border rounded-md text-center">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label for="proposedMedical" class="text-gray-600">Health/Medical</label>
+                        <input type="number" id="proposedMedical" placeholder="e.g., 200000" class="w-36 px-2 py-1 border rounded-md text-center">
+                    </div>
+                </div>
+
+                <div class="mt-6 flex items-center justify-between">
+                    <label for="proposedPremium" class="text-gray-600">Proposed Premium</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="proposedPremium" placeholder="e.g., 1200" class="w-32 px-2 py-1 border rounded-md text-center">
+                        <select id="proposedPremiumFrequency" class="px-2 py-1 border rounded-md">
+                            <option value="annually">Annually</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="half-yearly">Half-yearly</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <!-- Right Column: Outputs -->
-            <div class="lg:col-span-8 space-y-8">
-                <!-- Monthly/Annual/Quarterly/Half-Yearly Investment Card -->
-                <div id="monthlyInvestmentCard" class="card value-card hidden">
-                    <h2 id="monthlyInvestmentTitle" class="text-2xl font-bold text-slate-700 text-center mb-4">Your Monthly Investment</h2>
-                    <p id="valuePremium" class="text-5xl font-extrabold text-indigo-600 text-center"></p>
-                </div>
-
-                <!-- Coverage Breakdown Card (Total Proposed Coverage) -->
-                <div id="protectionBreakdownCard" class="card value-card hidden">
-                    <h2 class="text-2xl font-bold text-slate-700 text-center mb-4">Your Coverage Breakdown</h2>
-                    <div id="valueProtectionBreakdown" class="mt-2 text-slate-800 font-semibold space-y-2"></div>
-                    <hr class="my-2 border-slate-300">
-                    <p id="valueProtectionTotal" class="text-2xl font-extrabold text-indigo-700 mt-2 text-center"></p>
-                </div>
-
-                <!-- New Combined Coverage Overview Card -->
-                <div id="coverageOverviewCard" class="card hidden">
-                    <h2 class="text-2xl font-bold text-slate-700 mb-6">Your Coverage Overview</h2>
-                    <div id="combinedCoverageList" class="space-y-4">
-                        <!-- Individual expandable coverage items will be injected here -->
-                    </div>
-                </div>
+            <!-- Results Section -->
+            <div id="resultsPanel" class="lg:col-span-2 bg-gray-50 p-6 rounded-2xl shadow-inner flex flex-col justify-between">
+                <!-- Results will be dynamically generated here -->
             </div>
         </div>
     </div>
 
     <script>
-        const annualIncomeEl = document.getElementById('annualIncome');
-        const updateButton = document.getElementById('updateButton');
-        const proposedSection = document.getElementById('proposedSection');
+        // --- DOM Elements ---
+        const annualIncomeInput = document.getElementById('annualIncome');
+        const lifeMultiplierInput = document.getElementById('lifeMultiplier');
+        const ciMultiplierInput = document.getElementById('ciMultiplier');
+        const accidentMultiplierInput = document.getElementById('accidentMultiplier');
+        const medicalBenchmarkInput = document.getElementById('medicalBenchmark');
+
+        const newCustomerBtn = document.getElementById('newCustomerBtn');
+        const existingCustomerBtn = document.getElementById('existingCustomerBtn');
+        const existingPolicySection = document.getElementById('existingPolicySection');
+
+        const existingLifeInput = document.getElementById('existingLife');
+        const existingCIInput = document.getElementById('existingCI');
+        const existingAccidentInput = document.getElementById('existingAccident');
+        const existingMedicalInput = document.getElementById('existingMedical');
+        const existingPremiumInput = document.getElementById('existingPremium');
+        const existingPremiumFrequencySelect = document.getElementById('existingPremiumFrequency');
+
+        const proposedLifeInput = document.getElementById('proposedLife');
+        const proposedCIInput = document.getElementById('proposedCI');
+        const proposedAccidentInput = document.getElementById('proposedAccident');
+        const proposedMedicalInput = document.getElementById('proposedMedical');
+        const proposedPremiumInput = document.getElementById('proposedPremium');
+        const proposedPremiumFrequencySelect = document.getElementById('proposedPremiumFrequency');
         
-        // Updated card references
-        const monthlyInvestmentCard = document.getElementById('monthlyInvestmentCard');
-        const monthlyInvestmentTitle = document.getElementById('monthlyInvestmentTitle'); 
-        const protectionBreakdownCard = document.getElementById('protectionBreakdownCard');
-        const coverageOverviewCard = document.getElementById('coverageOverviewCard'); 
-        const combinedCoverageList = document.getElementById('combinedCoverageList'); 
-
-        // New premium input elements
-        const proposedLifeEl = document.getElementById('proposedLife');
-        const proposedCiEl = document.getElementById('proposedCi');
-        const proposedAdEl = document.getElementById('proposedAd');
-        const proposedMedEl = document.getElementById('proposedMed');
-        const proposedPremiumAmountEl = document.getElementById('proposedPremiumAmount');
-        const proposedPremiumFrequencyEl = document.getElementById('proposedPremiumFrequency');
-        
-        let hasAnalyzedGap = false; // True if the *current display* is a result of a completed analysis
-
-        const inputs = {
-            rules: { life: document.getElementById('ruleLife'), ci: document.getElementById('ruleCi'), ad: document.getElementById('ruleAd'), med: document.getElementById('ruleMed') },
-            existing: { life: document.getElementById('lifeInsurance'), ci: document.getElementById('criticalIllness'), ad: document.getElementById('accidentalDeath'), med: document.getElementById('medical') },
-            proposed: { 
-                life: proposedLifeEl, 
-                ci: proposedCiEl, 
-                ad: proposedAdEl, 
-                med: proposedMedEl 
-            },
-        };
-        
-        // Define inputs that trigger a *full reset* (disabling proposed section)
-        const initialInputsTriggerReset = document.querySelectorAll(
-            '#annualIncome, #ruleLife, #ruleCi, #ruleAd, #ruleMed, #lifeInsurance, #criticalIllness, #accidentalDeath, #medical'
-        );
-
-        // Define proposed plan inputs that *only* change button text (keep proposed section enabled)
-        const proposedPlanInputsTriggerUpdate = document.querySelectorAll(
-            '#proposedLife, #proposedCi, #proposedAd, #proposedMed, #proposedPremiumAmount'
-        );
+        const resultsPanel = document.getElementById('resultsPanel');
 
 
-        const formatCurrency = (value) => `RM ${Math.round(value).toLocaleString('en-US')}`;
+        // --- State Variables ---
+        let isExistingCustomer = false;
 
-        function calculateAnalysis(isSolutionAnalysis) {
-            const income = parseFloat(annualIncomeEl.value) || 0;
-            const rules = {
-                life: parseFloat(inputs.rules.life.value) || 0,
-                ci: parseFloat(inputs.rules.ci.value) || 0,
-                ad: parseFloat(inputs.rules.ad.value) || 0,
-                med: parseFloat(inputs.rules.med.value) || 0,
-            };
+        // --- Helper Functions ---
 
-            const existing = {}, proposed = {}, newTotal = {}, recommended = {}, initialGap = {}, finalGap = {};
-            let totalNewProtection = 0;
-            const keys = ['life', 'ci', 'ad', 'med'];
+        /**
+         * Formats a number as a currency string with RM prefix.
+         * @param {number} value The number to format.
+         * @param {boolean} shorten If true, shorten large numbers (e.g., 100K, 1.2M).
+         * @returns {string} The formatted currency string.
+         */
+        function formatCurrency(value, shorten = false) {
+            if (typeof value !== 'number' || isNaN(value) || value === 0) return 'RM 0';
             
-            keys.forEach(key => {
-                existing[key] = parseFloat(inputs.existing[key].value) || 0;
-                proposed[key] = isSolutionAnalysis ? (parseFloat(inputs.proposed[key].value) || 0) : 0;
-                newTotal[key] = existing[key] + proposed[key];
-                totalNewProtection += proposed[key];
-            });
-
-            const proposedPremiumAmount = parseFloat(proposedPremiumAmountEl.value) || 0;
-            const proposedPremiumFrequency = proposedPremiumFrequencyEl.value;
-
-            let monthlyEquivalentPremium = 0;
-            switch (proposedPremiumFrequency) {
-                case 'annually':
-                    monthlyEquivalentPremium = proposedPremiumAmount / 12;
-                    break;
-                case 'half-yearly':
-                    monthlyEquivalentPremium = proposedPremiumAmount / 6;
-                    break;
-                case 'quarterly':
-                    monthlyEquivalentPremium = proposedPremiumAmount / 3;
-                    break;
-                case 'monthly':
-                default:
-                    monthlyEquivalentPremium = proposedPremiumAmount;
-                    break;
+            if (shorten) {
+                if (value >= 1000000) {
+                    return `RM ${(value / 1000000).toFixed(1)}M`;
+                } else if (value >= 1000) {
+                    return `RM ${(value / 1000).toFixed(0)}K`;
+                }
             }
-
-
-            recommended.life = income * rules.life;
-            recommended.ci = income * rules.ci;
-            recommended.ad = income * rules.ad;
-            recommended.med = rules.med;
-
-            keys.forEach(key => {
-                initialGap[key] = Math.max(0, recommended[key] - existing[key]);
-                finalGap[key] = Math.max(0, recommended[key] - newTotal[key]);
-            });
-
-            return { 
-                existing, proposed, newTotal, recommended, initialGap, finalGap, 
-                proposedPremiumAmount, proposedPremiumFrequency, totalNewProtection,
-                monthlyEquivalentPremium 
-            };
+            
+            return `RM ${value.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
         }
         
-        function updateView(isSolutionView) {
-             if (isSolutionView) {
-                monthlyInvestmentCard.classList.remove('hidden');
-                protectionBreakdownCard.classList.remove('hidden');
-                coverageOverviewCard.classList.remove('hidden');
-            } else {
-                monthlyInvestmentCard.classList.add('hidden');
-                protectionBreakdownCard.classList.add('hidden');
-                coverageOverviewCard.classList.remove('hidden'); 
-            }
-        }
-
-        function updateValueCard(analysis) { 
-            const { proposedPremiumAmount, proposedPremiumFrequency, totalNewProtection, proposed } = analysis;
-
-            let frequencyTitle = '';
-            switch (proposedPremiumFrequency) {
-                case 'annually':
-                    frequencyTitle = 'Your Annual Investment';
-                    break;
-                case 'half-yearly':
-                    frequencyTitle = 'Your Half-Yearly Investment';
-                    break;
-                case 'quarterly':
-                    frequencyTitle = 'Your Quarterly Investment';
-                    break;
+        /**
+         * Converts premium amount to annual value based on frequency.
+         * @param {number} premium The premium amount.
+         * @param {string} frequency The premium frequency (e.g., 'monthly').
+         * @returns {number} The annual premium value.
+         */
+        function getAnnualPremium(premium, frequency) {
+            switch (frequency) {
                 case 'monthly':
+                    return premium * 12;
+                case 'quarterly':
+                    return premium * 4;
+                case 'half-yearly':
+                    return premium * 2;
+                case 'annually':
                 default:
-                    frequencyTitle = 'Your Monthly Investment';
-                    break;
+                    return premium;
             }
-            monthlyInvestmentTitle.textContent = frequencyTitle;
-            document.getElementById('valuePremium').textContent = formatCurrency(proposedPremiumAmount);
+        }
+        
+        /**
+         * Creates an SVG icon for the results section.
+         * @param {string} dPath The SVG path data.
+         * @param {string} color The Tailwind CSS color class.
+         * @returns {string} The HTML string for the SVG.
+         */
+        function createIcon(dPath, color) {
+            return `
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 ${color}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    ${dPath}
+                </svg>
+            `;
+        }
+        
+        /**
+         * Generates the HTML for a single visual comparison block.
+         * @param {string} title The title of the comparison (e.g., "Life Coverage").
+         * @param {string} iconSvg The SVG icon HTML string.
+         * @param {number} benchmark The target benchmark value.
+         * @param {number} existing The existing coverage value.
+         * @param {number} proposed The proposed coverage value.
+         * @param {boolean} isProposedImpact If true, this is the "Proposed Plan Impact" block.
+         * @returns {string} The HTML string for the visual comparison block.
+         */
+        function createComparisonBlock(title, iconSvg, benchmark, existing, proposed, isProposedImpact) {
+            const totalCoverage = existing + proposed;
+            
+            // Calculate percentages based on benchmark
+            const existingPercentage = (existing / benchmark) * 100;
+            const proposedPercentage = (proposed / benchmark) * 100;
+            const totalPercentage = (totalCoverage / benchmark) * 100;
 
-            const breakdownEl = document.getElementById('valueProtectionBreakdown');
-            breakdownEl.innerHTML = '';
-            const names = {life: 'Life Insurance', ci: 'Critical Illness', ad: 'Accidental Death', med: 'Health/Medical'}; 
-            Object.keys(proposed).forEach(key => {
-                if (proposed[key] > 0) {
-                    breakdownEl.innerHTML += `
-                        <div class="flex justify-between items-center py-1">
-                            <span class="text-slate-600">${names[key]}:</span>
-                            <span class="font-bold text-slate-800">${formatCurrency(proposed[key])}</span>
-                        </div>
-                    `;
+            let statusText = '';
+            
+            if (isProposedImpact) {
+                if (proposed === 0 && existing < benchmark) {
+                    statusText = 'Not in Proposed Plan';
+                } else if (totalCoverage >= benchmark) {
+                    statusText = 'Goal Achieved!';
+                } else {
+                    statusText = 'Moving towards the goal';
                 }
-            });
-            document.getElementById('valueProtectionTotal').textContent = `Total Coverage: ${formatCurrency(totalNewProtection)}`;
+            } else { // This is for "Existing Plan vs. Benchmarks"
+                if (existing >= benchmark) {
+                    statusText = 'Goal Achieved!';
+                } else {
+                    statusText = 'Moving towards the goal';
+                }
+            }
+
+
+            let existingBarHtml = '';
+            let proposedBarHtml = '';
+            
+            const MIN_LABEL_WIDTH_PERCENT = 10; // Minimum percentage for a label to be visible
+
+            // Render existing bar and its label
+            if (isExistingCustomer && existing > 0) {
+                const existingLabel = formatCurrency(existing, true);
+                const barWidth = `${Math.min(existingPercentage, 100)}%`;
+                const isLabelVisible = existingPercentage > MIN_LABEL_WIDTH_PERCENT;
+
+                existingBarHtml = `<div class="progress-bar bg-green-500 z-10" style="width: ${barWidth};">
+                                    <span class="progress-label p-1 ${isLabelVisible ? '' : 'hidden'}">${existingLabel}</span>
+                                </div>`;
+            }
+
+            // Render proposed bar and its label
+            if (proposed > 0) {
+                const proposedLabel = isExistingCustomer ? `+${formatCurrency(proposed, true)}` : `${formatCurrency(totalCoverage, true)}`;
+                const leftPosition = isExistingCustomer ? `${Math.min(existingPercentage, 100)}%` : '0';
+                const proposedBarColor = (totalCoverage >= benchmark) ? 'bg-green-500' : 'bg-blue-500';
+                
+                const proposedBarWidth = Math.min(proposedPercentage, 100 - existingPercentage);
+                const isLabelVisible = proposedBarWidth > MIN_LABEL_WIDTH_PERCENT;
+                
+                proposedBarHtml = `<div class="progress-bar ${proposedBarColor} z-20" style="width: ${proposedBarWidth}%; left: ${leftPosition};">
+                                    <span class="progress-label p-1 ${isLabelVisible ? '' : 'hidden'}">${proposedLabel}</span>
+                                </div>`;
+            }
+
+
+            return `
+                <div class="p-4 bg-white rounded-xl shadow-md">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            ${iconSvg}
+                            <h4 class="font-semibold text-gray-700">${title}</h4>
+                        </div>
+                        <span class="text-sm font-medium text-gray-500">${statusText}</span>
+                    </div>
+
+                    <div class="progress-bar-container">
+                        ${existingBarHtml}
+                        ${proposedBarHtml}
+                        <div class="benchmark-marker" style="left: ${Math.min(benchmark / totalCoverage, 1) * 100}%;"></div>
+                    </div>
+
+                    <div class="flex justify-between text-xs mt-2 text-gray-600">
+                        <span>Total Coverage: ${formatCurrency(totalCoverage)}</span>
+                        <span>Benchmark: ${formatCurrency(benchmark)}</span>
+                    </div>
+                </div>
+            `;
         }
 
-        function updateCoverageOverview(analysis, isSolutionView) {
-            const { existing, proposed, newTotal, recommended, initialGap, finalGap } = analysis;
-            const keys = ['life', 'ci', 'ad', 'med'];
-            const names = [
-                { title: 'Life', subtitle: 'A legacy coverage to help your loved ones secure the future'},
-                { title: 'Critical Illness', subtitle: 'Protecting your future when you need it most'},
-                { title: 'Accidental', subtitle: 'Your shield against life\'s unexpected turns'},
-                { title: 'Health/Medical', subtitle: 'Empowering your health, securing your recovery'}
-            ];
-            const icons = ['👨‍👩‍👧‍👦', '❤️‍🩹', '☂️', '🛡️'];
+        /**
+         * Creates a new two-bar comparison chart for total coverage.
+         * @param {number} existingTotal The total existing coverage.
+         * @param {number} proposedTotal The total proposed coverage.
+         * @returns {string} The HTML string for the new two-bar comparison chart.
+         */
+        function createTwoBarComparisonChart(existingTotal, proposedTotal) {
+            const maxValue = Math.max(existingTotal, proposedTotal, 1);
+            const existingWidth = (existingTotal / maxValue) * 100;
+            const proposedWidth = (proposedTotal / maxValue) * 100;
 
-            let coverageItems = keys.map((key, index) => {
-                const rec = recommended[key];
-                const ex = existing[key];
-                const total = newTotal[key];
-                const prop = proposed[key]; 
-
-                let statusText = '';
-                let statusAmount = 0;
-                let cardStatusClass = '';
-                let isGoalMet = false;
-                let summaryDetailsHTML = ''; 
-                let currentDetailedContentHTML = ''; 
-
-                if (isSolutionView) {
-                    isGoalMet = (total >= rec);
-                    if (isGoalMet) {
-                        statusText = 'Benchmark Achieved!';
-                        statusAmount = total; 
-                        cardStatusClass = 'coverage-achieved';
-                    } else if (prop > 0) { 
-                        statusText = 'New Total Coverage'; 
-                        statusAmount = newTotal[key]; 
-                        cardStatusClass = 'coverage-needed'; 
-                    } else { 
-                        statusText = 'Not in Current Plan';
-                        statusAmount = initialGap[key]; 
-                        cardStatusClass = 'coverage-deferred'; 
-                    }
-
-                    currentDetailedContentHTML = `
-                        <div class="mt-4 pt-4 border-t border-slate-200">
-                            <div class="flex justify-between items-center py-1">
-                                <span class="text-slate-600">Current Coverage:</span>
-                                <span class="font-bold text-slate-800">${formatCurrency(existing[key])}</span>
-                            </div>
-                            <div class="flex justify-between items-center py-1">
-                                <span class="text-slate-600">New Plan:</span>
-                                <span class="font-bold text-emerald-600">${formatCurrency(proposed[key])}</span>
-                            </div>
-                            <hr class="my-2 border-slate-300">
-                            <div class="flex justify-between items-center py-1">
-                                <span class="font-bold text-slate-800">Total New Coverage:</span>
-                                <span class="text-xl font-bold text-slate-900">${formatCurrency(newTotal[key])}</span>
-                            </div>
-                            <div class="flex justify-between items-center py-1 mt-2">
-                                <span class="text-sm text-slate-500">Benchmark:</span>
-                                <span class="text-sm text-slate-500">${formatCurrency(recommended[key])}</span>
-                            </div>
-                            ${finalGap[key] > 0 ? `
-                            <div class="flex justify-between items-center py-1 text-red-600 font-semibold">
-                                <span>Remaining Gap:</span>
-                                <span>${formatCurrency(finalGap[key])}</span>
-                            </div>
-                            ` : ''}
+            return `
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Total Coverage Comparison</h3>
+                    <div class="two-bar-comparison-container">
+                        <div class="two-bar-comparison-item">
+                            <div class="two-bar-comparison-bar bg-green-500" style="width: ${existingWidth}%;"></div>
                         </div>
-                    `;
-
-                } else {
-                    isGoalMet = (ex >= rec);
-                    if (isGoalMet) {
-                        statusText = 'Benchmark Achieved!';
-                        statusAmount = ex; 
-                        cardStatusClass = 'coverage-achieved';
-                    } else {
-                        statusText = 'Coverage Gap'; 
-                        statusAmount = initialGap[key];
-                        cardStatusClass = 'coverage-needed';
-                    }
-
-                    summaryDetailsHTML = `
-                        <p class="text-sm text-slate-600 mt-1">
-                            Current: <span class="font-semibold">${formatCurrency(existing[key])}</span> | Benchmark: <span class="font-semibold">${formatCurrency(recommended[key])}</span>
-                        </p>
-                    `;
-
-                    currentDetailedContentHTML = `
-                        <div class="mt-4 pt-4 border-t border-slate-200">
-                            <div class="flex justify-between items-center py-1">
-                                <span class="text-slate-600">Current Coverage:</span>
-                                <span class="font-bold text-slate-800">${formatCurrency(existing[key])}</span>
-                            </div>
-                            <div class="flex justify-between items-center py-1 mt-2">
-                                <span class="text-sm text-slate-500">Benchmark:</span>
-                                <span class="text-sm text-slate-500">${formatCurrency(recommended[key])}</span>
-                            </div>
-                            ${initialGap[key] > 0 ? `
-                            <div class="flex justify-between items-center py-1 text-red-600 font-semibold">
-                                <span>Coverage Gap:</span>
-                                <span>${formatCurrency(initialGap[key])}</span>
-                            </div>
-                            ` : ''}
-                        </div>
-                    `;
-                }
-
-                return {
-                    key,
-                    name: names[index].title,
-                    subtitle: names[index].subtitle,
-                    icon: icons[index],
-                    statusText,
-                    statusAmount,
-                    cardStatusClass,
-                    summaryDetailsHTML,
-                    currentDetailedContentHTML,
-                    proposedAmount: prop 
-                };
-            });
-
-            if (isSolutionView) {
-                coverageItems.sort((a, b) => {
-                    if (a.proposedAmount > 0 && b.proposedAmount === 0) return -1;
-                    if (a.proposedAmount === 0 && b.proposedAmount > 0) return 1;
-                    return 0;
-                });
-            }
-
-            combinedCoverageList.innerHTML = ''; 
-            coverageItems.forEach(item => {
-                const itemHTML = `
-                    <div class="individual-coverage-item ${item.cardStatusClass}" data-key="${item.key}">
-                        <div class="summary-header">
-                            <span class="text-3xl">${item.icon}</span>
-                            <div class="text-left flex-grow">
-                                <h3 class="text-xl font-bold text-slate-800 leading-tight">${item.name}</h3>
-                                <p class="text-sm text-slate-500 font-medium">${item.subtitle}</p>
-                                ${item.summaryDetailsHTML} 
-                            </div>
-                            <div class="ml-auto text-right">
-                                <p class="text-base font-semibold ${item.cardStatusClass === 'coverage-achieved' ? 'text-emerald-700' : (item.cardStatusClass === 'coverage-needed' ? 'text-amber-700' : 'text-slate-500')}">${item.statusText}</p>
-                                <p class="text-4xl font-extrabold ${item.cardStatusClass === 'coverage-achieved' ? 'text-emerald-600' : (item.cardStatusClass === 'coverage-needed' ? 'text-amber-600' : 'text-slate-700')}">${formatCurrency(item.statusAmount)}</p>
-                            </div>
-                        </div>
-                        <div class="detailed-breakdown-content">
-                            ${item.currentDetailedContentHTML} 
+                        <div class="two-bar-comparison-item">
+                            <div class="two-bar-comparison-bar bg-blue-500" style="width: ${proposedWidth}%;"></div>
                         </div>
                     </div>
-                `;
-                combinedCoverageList.innerHTML += itemHTML;
-            });
-
-            document.querySelectorAll('.individual-coverage-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const content = this.querySelector('.detailed-breakdown-content');
-                    content.classList.toggle('expanded');
-                });
-            });
+                    <div class="flex flex-col gap-2 mt-4 text-sm font-medium">
+                        <div class="flex justify-between items-center text-gray-700">
+                            <span>Existing Coverage:</span>
+                            <span class="font-bold text-green-600">${formatCurrency(existingTotal)}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-gray-700">
+                            <span>Proposed Coverage:</span>
+                            <span class="font-bold text-blue-600">${formatCurrency(proposedTotal)}</span>
+                        </div>
+                        <hr class="border-gray-300">
+                        <div class="flex justify-between items-center text-gray-800 font-bold text-lg">
+                            <span>Total Combined Coverage:</span>
+                            <span>${formatCurrency(existingTotal + proposedTotal)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        updateButton.addEventListener('click', () => {
-            if (updateButton.textContent === 'Analyze Coverage Gap') {
-                // If it's the first time running analysis OR inputs have changed
-                const isInitialRun = proposedSection.classList.contains('disabled-section');
+        /**
+         * Generates the HTML for the summary section.
+         * @param {number} proposedPremiumValue The proposed premium value.
+         * @param {string} proposedPremiumFrequency The frequency of the proposed premium.
+         * @param {number} proposedLife The proposed life coverage.
+         * @param {number} proposedCI The proposed CI coverage.
+         * @param {number} proposedAccident The proposed accident coverage.
+         * @param {number} proposedMedical The proposed medical coverage.
+         * @returns {string} The HTML string for the summary section.
+         */
+        function createSummarySection(proposedPremiumValue, proposedPremiumFrequency, proposedLife, proposedCI, proposedAccident, proposedMedical) {
+            const proposedTotalCoverage = proposedLife + proposedCI + proposedAccident + proposedMedical;
+            let frequencyText = proposedPremiumFrequency.charAt(0).toUpperCase() + proposedPremiumFrequency.slice(1);
+            
+            return `
+                <div class="space-y-6 mb-8">
+                    <div class="p-6 bg-blue-50 rounded-2xl shadow-md">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4 text-center">Your Coverage Breakdown</h3>
+                        <div class="space-y-2 text-lg">
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Life Insurance:</span>
+                                <span class="text-gray-900 font-bold">${formatCurrency(proposedLife)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Critical Illness:</span>
+                                <span class="text-gray-900 font-bold">${formatCurrency(proposedCI)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Accidental:</span>
+                                <span class="text-gray-900 font-bold">${formatCurrency(proposedAccident)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Health / Medical:</span>
+                                <span class="text-gray-900 font-bold">${formatCurrency(proposedMedical)}</span>
+                            </div>
+                            <hr class="border-gray-300 my-4">
+                            <div class="flex justify-between text-xl font-bold">
+                                <span class="text-gray-800">Total Coverage:</span>
+                                <span class="text-blue-600">${formatCurrency(proposedTotalCoverage)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 bg-blue-50 rounded-2xl shadow-md text-center">
+                        <h3 class="text-xl font-semibold text-gray-800">Your ${frequencyText} Investment</h3>
+                        <p class="text-4xl font-bold text-blue-600 mt-2">${formatCurrency(proposedPremiumValue)}</p>
+                    </div>
+                </div>
+            `;
+        }
 
-                if (isInitialRun) {
-                    // First time: run initial gap analysis, then enable proposed section
-                    runAnalysis(false);
-                    proposedSection.classList.remove('disabled-section'); // Enable
-                } else {
-                    // Inputs (either initial or proposed) have changed, re-run solution analysis
-                    runAnalysis(true);
-                    // proposedSection remains enabled
-                }
-                hasAnalyzedGap = true; // Analysis is now current
-                updateButton.textContent = 'Update With Solution';
-            } else {
-                // Button says "Update With Solution", just re-run solution analysis
-                runAnalysis(true);
-                // State remains hasAnalyzedGap = true, proposedSection enabled, button text "Update With Solution"
+        /**
+         * Generates the HTML for the existing coverage breakdown, now with a similar UI to the new summary.
+         * @param {number} existingLife The existing life coverage.
+         * @param {number} existingCI The existing CI coverage.
+         * @param {number} existingAccident The existing accident coverage.
+         * @param {number} existingMedical The existing medical coverage.
+         * @param {number} existingPremiumValue The existing premium value.
+         * @param {string} existingPremiumFrequency The frequency of the existing premium.
+         * @returns {string} The HTML string for the breakdown.
+         */
+        function createExistingCoverageBreakdown(existingLife, existingCI, existingAccident, existingMedical, existingPremiumValue, existingPremiumFrequency) {
+            const existingTotalCoverage = existingLife + existingCI + existingAccident + existingMedical;
+            let frequencyText = existingPremiumFrequency.charAt(0).toUpperCase() + existingPremiumFrequency.slice(1);
+
+            return `
+                <div class="p-6 bg-green-50 rounded-2xl shadow-md mt-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 text-center">Existing Coverage Breakdown</h3>
+                    <div class="space-y-2 text-lg">
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Life Insurance:</span>
+                            <span class="text-gray-900 font-bold">${formatCurrency(existingLife)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Critical Illness:</span>
+                            <span class="text-gray-900 font-bold">${formatCurrency(existingCI)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Accidental:</span>
+                            <span class="text-gray-900 font-bold">${formatCurrency(existingAccident)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Health / Medical:</span>
+                            <span class="text-gray-900 font-bold">${formatCurrency(existingMedical)}</span>
+                        </div>
+                        <hr class="border-gray-300 my-4">
+                        <div class="flex justify-between text-xl font-bold">
+                            <span class="text-gray-800">Total Coverage:</span>
+                            <span class="text-green-600">${formatCurrency(existingTotalCoverage)}</span>
+                        </div>
+                    </div>
+                    <div class="p-6 bg-green-50 rounded-2xl shadow-md text-center mt-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Your ${frequencyText} Investment</h3>
+                        <p class="text-4xl font-bold text-green-600 mt-2">${formatCurrency(existingPremiumValue)}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Creates the legend HTML.
+         * @param {boolean} isExistingCustomer Whether the user is an existing customer.
+         * @returns {string} The HTML string for the legend.
+         */
+        function createLegend(isExistingCustomer) {
+            let legendHtml = `
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded-full bg-blue-500"></span>
+                    <span>Proposed Coverage</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded-full" style="background-color: #9ca3af;"></span>
+                    <span>Benchmark Goal</span>
+                </div>
+            `;
+            if (isExistingCustomer) {
+                legendHtml = `
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded-full bg-green-500"></span>
+                        <span>Existing Coverage</span>
+                    </div>
+                ` + legendHtml;
             }
-        });
+            return `<div id="legendContainer" class="flex flex-wrap gap-4 text-sm font-medium text-gray-600 mb-6">${legendHtml}</div>`;
+        }
 
-        function setupReAnalysisTriggers() {
-            // Monitor initial inputs for changes that cause a full reset (disabling proposed section)
-            initialInputsTriggerReset.forEach(input => {
-                input.addEventListener('input', () => {
-                    if (hasAnalyzedGap) { // Only trigger reset if an analysis was previously current
-                        hasAnalyzedGap = false; 
-                        proposedSection.classList.add('disabled-section'); // Re-disable proposed section
-                        updateButton.textContent = 'Analyze Coverage Gap'; 
-                    }
-                });
-            });
 
-            // Monitor proposed plan inputs and frequency for changes that require re-running analysis
-            // These changes should NOT disable the proposed section
-            proposedPlanInputsTriggerUpdate.forEach(input => {
-                input.addEventListener('input', () => {
-                    if (hasAnalyzedGap) { // Only change button text if analysis was previously current
-                        hasAnalyzedGap = false; // Indicate analysis is no longer current
-                        updateButton.textContent = 'Analyze Coverage Gap';
-                    }
-                });
-            });
+        /**
+         * Main function to perform calculations and update the UI.
+         */
+        function calculateAndDisplay() {
+            try {
+                // --- Get Input Values ---
+                const annualIncome = parseFloat(annualIncomeInput.value) || 0;
+                const lifeMultiplier = parseFloat(lifeMultiplierInput.value) || 5;
+                const ciMultiplier = parseFloat(ciMultiplierInput.value) || 3;
+                const accidentMultiplier = parseFloat(accidentMultiplierInput.value) || 3;
+                const medicalBenchmarkValue = parseFloat(medicalBenchmarkInput.value) || 1000000;
 
-            proposedPremiumFrequencyEl.addEventListener('change', () => {
-                if (hasAnalyzedGap) { // Corrected typo: hasAnalyAnalyzedGap -> hasAnalyzedGap
-                    hasAnalyzedGap = false; // Indicate analysis is no longer current
-                    updateButton.textContent = 'Analyze Coverage Gap';
+                const proposedLife = parseFloat(proposedLifeInput.value) || 0;
+                const proposedCI = parseFloat(proposedCIInput.value) || 0;
+                const proposedAccident = parseFloat(proposedAccidentInput.value) || 0;
+                const proposedMedical = parseFloat(proposedMedicalInput.value) || 0;
+                const proposedPremiumValue = parseFloat(proposedPremiumInput.value) || 0;
+                const proposedPremiumFrequency = proposedPremiumFrequencySelect.value;
+                const proposedAnnualPremium = getAnnualPremium(proposedPremiumValue, proposedPremiumFrequency);
+
+                let existingLife = 0;
+                let existingCI = 0;
+                let existingAccident = 0;
+                let existingMedical = 0;
+                let existingPremiumValue = 0;
+                let existingPremiumFrequency = 'annually';
+
+                if (isExistingCustomer) {
+                    existingLife = parseFloat(existingLifeInput.value) || 0;
+                    existingCI = parseFloat(existingCIInput.value) || 0;
+                    existingAccident = parseFloat(existingAccidentInput.value) || 0;
+                    existingMedical = parseFloat(existingMedicalInput.value) || 0;
+                    existingPremiumValue = parseFloat(existingPremiumInput.value) || 0;
+                    existingPremiumFrequency = existingPremiumFrequencySelect.value;
                 }
-            });
+                
+                const existingAnnualPremium = getAnnualPremium(existingPremiumValue, existingPremiumFrequency);
+
+                // --- Calculate Benchmarks ---
+                const lifeBenchmark = annualIncome * lifeMultiplier;
+                const ciBenchmark = annualIncome * ciMultiplier;
+                const accidentBenchmark = annualIncome * accidentMultiplier;
+                const medicalBenchmark = medicalBenchmarkValue;
+
+                // --- Define Icons with new SVG paths ---
+                // Shield for Life Coverage
+                const lifeIcon = createIcon(`<path d="M12 2l10 5l-10 5l-10-5l10-5z"/><path d="M2 17l10 5l10-5"/><path d="M2 12l10 5l10-5"/>`, 'text-yellow-500');
+                // Medical Cross for CI Coverage
+                const ciIcon = createIcon(`<path d="M20.5 12.5l-2.5-2.5l-2.5 2.5l2.5 2.5z"/><path d="M22 22l-2-2"/><path d="M7.5 17.5l-2.5-2.5l-2.5 2.5l2.5 2.5z"/><path d="M2 2l2 2"/><path d="M22 2L18 6"/><path d="M12 7l0 10"/>`, 'text-red-500');
+                // Lightning bolt for Accident Coverage
+                const accidentIcon = createIcon(`<path d="M13 2l-7 10h5l-2 10l9-12h-5l2-10z"/>`, 'text-orange-500');
+                // Hospital/cross for Medical Coverage
+                const medicalIcon = createIcon(`<path d="M12 5v14M5 12h14"/>`, 'text-blue-500');
+
+                // --- Generate HTML based on Customer Type ---
+                let fullResultsHtml = '';
+
+                if (isExistingCustomer) {
+                    const totalExistingCoverage = existingLife + existingCI + existingAccident + existingMedical;
+                    const totalProposedCoverage = proposedLife + proposedCI + proposedAccident + proposedMedical;
+                    
+                    fullResultsHtml += `
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-indigo-500"><circle cx="12" cy="12" r="10"/><path d="M8 12l4 4l4-4"/><path d="M12 8l0 4"/></svg>
+                            Protection Visuals
+                        </h2>
+                        ${createLegend(isExistingCustomer)}
+                        <div class="space-y-8">
+                            <h3 class="text-xl font-medium text-gray-800">Existing Plan vs. Benchmarks</h3>
+                            ${createComparisonBlock('Life Coverage', lifeIcon, lifeBenchmark, existingLife, 0, false)}
+                            ${createComparisonBlock('CI Coverage', ciIcon, ciBenchmark, existingCI, 0, false)}
+                            ${createComparisonBlock('Accident Coverage', accidentIcon, accidentBenchmark, existingAccident, 0, false)}
+                            ${createComparisonBlock('Medical Coverage', medicalIcon, medicalBenchmark, existingMedical, 0, false)}
+                            ${createExistingCoverageBreakdown(existingLife, existingCI, existingAccident, existingMedical, existingPremiumValue, existingPremiumFrequency)}
+                            <h3 class="text-xl font-medium text-gray-800 mt-8 pt-4 border-t border-gray-200">Proposed Plan Impact vs. Benchmarks</h3>
+                            ${createComparisonBlock('Life Coverage (Total)', lifeIcon, lifeBenchmark, existingLife, proposedLife, true)}
+                            ${createComparisonBlock('CI Coverage (Total)', ciIcon, ciBenchmark, existingCI, proposedCI, true)}
+                            ${createComparisonBlock('Accident Coverage (Total)', accidentIcon, accidentBenchmark, existingAccident, proposedAccident, true)}
+                            ${createComparisonBlock('Medical Coverage (Total)', medicalIcon, medicalBenchmark, existingMedical, proposedMedical, true)}
+                        </div>
+                        <div class="mt-8 pt-4 border-t border-gray-200">
+                             ${createSummarySection(proposedPremiumValue, proposedPremiumFrequency, proposedLife, proposedCI, proposedAccident, proposedMedical)}
+                        </div>
+                        <div class="mt-8 pt-4 border-t border-gray-200">
+                            ${createTwoBarComparisonChart(totalExistingCoverage, totalProposedCoverage)}
+                        </div>
+                    `;
+                } else {
+                    // New customer flow
+                    const totalProposedCoverage = proposedLife + proposedCI + proposedAccident + proposedMedical;
+                    fullResultsHtml += `
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-indigo-500"><circle cx="12" cy="12" r="10"/><path d="M8 12l4 4l4-4"/><path d="M12 8l0 4"/></svg>
+                            Protection Visuals
+                        </h2>
+                        ${createLegend(isExistingCustomer)}
+                        <div class="space-y-8">
+                            <h3 class="text-xl font-medium text-gray-800">Proposed Plan vs. Benchmarks</h3>
+                            ${createComparisonBlock('Life Coverage', lifeIcon, lifeBenchmark, 0, proposedLife, true)}
+                            ${createComparisonBlock('CI Coverage', ciIcon, ciBenchmark, 0, proposedCI, true)}
+                            ${createComparisonBlock('Accident Coverage', accidentIcon, accidentBenchmark, 0, proposedAccident, true)}
+                            ${createComparisonBlock('Medical Coverage', medicalIcon, medicalBenchmark, 0, proposedMedical, true)}
+                        </div>
+                        <div class="mt-8 pt-4 border-t border-gray-200">
+                            ${createSummarySection(proposedPremiumValue, proposedPremiumFrequency, proposedLife, proposedCI, proposedAccident, proposedMedical)}
+                        </div>
+                    `;
+                }
+
+                resultsPanel.innerHTML = fullResultsHtml;
+
+            } catch (error) {
+                console.error("An error occurred during calculation:", error);
+            }
         }
         
-        function runAnalysis(isSolution) {
-            const analysis = calculateAnalysis(isSolution);
-            updateView(isSolution); 
-            updateCoverageOverview(analysis, isSolution); 
-            updateValueCard(analysis); 
+        /**
+         * Resets the proposed plan input fields to zero.
+         */
+        function resetProposedInputs() {
+            proposedLifeInput.value = '';
+            proposedCIInput.value = '';
+            proposedAccidentInput.value = '';
+            proposedMedicalInput.value = '';
+            proposedPremiumInput.value = '';
+            proposedPremiumFrequencySelect.value = 'annually';
         }
 
-        window.onload = () => {
-            calculateAnalysis(false); 
+        // --- Event Listeners ---
+        const allInputs = document.querySelectorAll('input[type="number"], select');
+        allInputs.forEach(input => {
+            input.addEventListener('input', calculateAndDisplay);
+        });
 
-            monthlyInvestmentCard.classList.add('hidden');
-            protectionBreakdownCard.classList.add('hidden');
-            coverageOverviewCard.classList.add('hidden');
+        // Toggle between New and Existing Customer
+        newCustomerBtn.addEventListener('click', () => {
+            isExistingCustomer = false;
+            existingPolicySection.classList.add('hidden');
+            newCustomerBtn.classList.add('bg-blue-600', 'text-white');
+            newCustomerBtn.classList.remove('bg-transparent', 'text-gray-600');
+            existingCustomerBtn.classList.remove('bg-blue-600', 'text-white');
+            existingCustomerBtn.classList.add('bg-transparent', 'text-gray-600');
+            // Reset proposed and existing inputs for a clean start
+            existingLifeInput.value = '';
+            existingCIInput.value = '';
+            existingAccidentInput.value = '';
+            existingMedicalInput.value = '';
+            existingPremiumInput.value = '';
+            existingPremiumFrequencySelect.value = 'annually';
+            resetProposedInputs();
+            calculateAndDisplay();
+        });
 
-            proposedPremiumFrequencyEl.value = 'monthly';
+        existingCustomerBtn.addEventListener('click', () => {
+            isExistingCustomer = true;
+            existingPolicySection.classList.remove('hidden');
+            existingCustomerBtn.classList.add('bg-blue-600', 'text-white');
+            existingCustomerBtn.classList.remove('bg-transparent', 'text-gray-600');
+            newCustomerBtn.classList.remove('bg-blue-600', 'text-white');
+            newCustomerBtn.classList.add('bg-transparent', 'text-gray-600');
+            // Reset proposed inputs when switching to existing customer
+            resetProposedInputs();
+            calculateAndDisplay();
+        });
 
-            hasAnalyzedGap = false; 
-            proposedSection.classList.add('disabled-section'); 
-            updateButton.textContent = 'Analyze Coverage Gap'; 
-
-            setupReAnalysisTriggers();
-        };
+        // Initial calculation on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            calculateAndDisplay();
+        });
     </script>
 </body>
 </html>
