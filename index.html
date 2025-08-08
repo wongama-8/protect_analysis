@@ -133,25 +133,25 @@
                 </h3>
                 
                 <div class="space-y-4 mb-6">
-                    <!-- Life Benchmark -->
+                    <!-- Medical Benchmark -->
                     <div class="flex items-center justify-between">
-                        <label for="lifeMultiplier" class="text-gray-600">Life (x Income)</label>
-                        <input type="number" id="lifeMultiplier" value="5" min="1" class="w-20 px-2 py-1 border rounded-md text-center">
+                        <label for="medicalBenchmark" class="text-gray-600">Medical (RM)</label>
+                        <input type="number" id="medicalBenchmark" value="1000000" min="100000" step="100000" class="w-36 px-2 py-1 border rounded-md text-center">
                     </div>
                     <!-- CI Benchmark -->
                     <div class="flex items-center justify-between">
                         <label for="ciMultiplier" class="text-gray-600">CI (x Income)</label>
                         <input type="number" id="ciMultiplier" value="3" min="1" class="w-20 px-2 py-1 border rounded-md text-center">
                     </div>
+                    <!-- Life Benchmark -->
+                    <div class="flex items-center justify-between">
+                        <label for="lifeMultiplier" class="text-gray-600">Life (x Income)</label>
+                        <input type="number" id="lifeMultiplier" value="5" min="1" class="w-20 px-2 py-1 border rounded-md text-center">
+                    </div>
                     <!-- Accident Benchmark -->
                     <div class="flex items-center justify-between">
                         <label for="accidentMultiplier" class="text-gray-600">Accident (x Income)</label>
                         <input type="number" id="accidentMultiplier" value="3" min="1" class="w-20 px-2 py-1 border rounded-md text-center">
-                    </div>
-                    <!-- Medical Benchmark -->
-                    <div class="flex items-center justify-between">
-                        <label for="medicalBenchmark" class="text-gray-600">Medical (RM)</label>
-                        <input type="number" id="medicalBenchmark" value="1000000" min="100000" step="100000" class="w-36 px-2 py-1 border rounded-md text-center">
                     </div>
                 </div>
 
@@ -163,20 +163,20 @@
                     </h3>
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
-                            <label for="existingLife" class="text-gray-600">Life Insurance</label>
-                            <input type="number" id="existingLife" placeholder="e.g., 100000" class="w-36 px-2 py-1 border rounded-md text-center">
+                            <label for="existingMedical" class="text-gray-600">Health/Medical</label>
+                            <input type="number" id="existingMedical" placeholder="e.g., 200000" class="w-36 px-2 py-1 border rounded-md text-center">
                         </div>
                         <div class="flex items-center justify-between">
                             <label for="existingCI" class="text-gray-600">Critical Illness</label>
                             <input type="number" id="existingCI" placeholder="e.g., 50000" class="w-36 px-2 py-1 border rounded-md text-center">
                         </div>
                         <div class="flex items-center justify-between">
-                            <label for="existingAccident" class="text-gray-600">Accidental</label>
-                            <input type="number" id="existingAccident" placeholder="e.g., 50000" class="w-36 px-2 py-1 border rounded-md text-center">
+                            <label for="existingLife" class="text-gray-600">Life Insurance</label>
+                            <input type="number" id="existingLife" placeholder="e.g., 100000" class="w-36 px-2 py-1 border rounded-md text-center">
                         </div>
                         <div class="flex items-center justify-between">
-                            <label for="existingMedical" class="text-gray-600">Health/Medical</label>
-                            <input type="number" id="existingMedical" placeholder="e.g., 200000" class="w-36 px-2 py-1 border rounded-md text-center">
+                            <label for="existingAccident" class="text-gray-600">Accidental</label>
+                            <input type="number" id="existingAccident" placeholder="e.g., 50000" class="w-36 px-2 py-1 border rounded-md text-center">
                         </div>
                     </div>
                     <div class="mt-6 flex items-center justify-between">
@@ -200,20 +200,20 @@
                 </h3>
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
-                        <label for="proposedLife" class="text-gray-600">Life Insurance</label>
-                        <input type="number" id="proposedLife" placeholder="e.g., 100000" class="w-36 px-2 py-1 border rounded-md text-center">
+                        <label for="proposedMedical" class="text-gray-600">Health/Medical</label>
+                        <input type="number" id="proposedMedical" placeholder="e.g., 200000" class="w-36 px-2 py-1 border rounded-md text-center">
                     </div>
                     <div class="flex items-center justify-between">
                         <label for="proposedCI" class="text-gray-600">Critical Illness</label>
                         <input type="number" id="proposedCI" placeholder="e.g., 50000" class="w-36 px-2 py-1 border rounded-md text-center">
                     </div>
                     <div class="flex items-center justify-between">
-                        <label for="proposedAccident" class="text-gray-600">Accidental</label>
-                        <input type="number" id="proposedAccident" placeholder="e.g., 50000" class="w-36 px-2 py-1 border rounded-md text-center">
+                        <label for="proposedLife" class="text-gray-600">Life Insurance</label>
+                        <input type="number" id="proposedLife" placeholder="e.g., 100000" class="w-36 px-2 py-1 border rounded-md text-center">
                     </div>
                     <div class="flex items-center justify-between">
-                        <label for="proposedMedical" class="text-gray-600">Health/Medical</label>
-                        <input type="number" id="proposedMedical" placeholder="e.g., 200000" class="w-36 px-2 py-1 border rounded-md text-center">
+                        <label for="proposedAccident" class="text-gray-600">Accidental</label>
+                        <input type="number" id="proposedAccident" placeholder="e.g., 50000" class="w-36 px-2 py-1 border rounded-md text-center">
                     </div>
                 </div>
 
@@ -479,20 +479,20 @@
                         <h3 class="text-xl font-semibold text-gray-800 mb-4 text-center">Your Coverage Breakdown</h3>
                         <div class="space-y-2 text-lg">
                             <div class="flex justify-between">
-                                <span class="text-gray-700">Life Insurance:</span>
-                                <span class="text-gray-900 font-bold">${formatCurrency(proposedLife)}</span>
+                                <span class="text-gray-700">Health / Medical:</span>
+                                <span class="text-gray-900 font-bold">${formatCurrency(proposedMedical)}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-700">Critical Illness:</span>
                                 <span class="text-gray-900 font-bold">${formatCurrency(proposedCI)}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-700">Accidental:</span>
-                                <span class="text-gray-900 font-bold">${formatCurrency(proposedAccident)}</span>
+                                <span class="text-gray-700">Life Insurance:</span>
+                                <span class="text-gray-900 font-bold">${formatCurrency(proposedLife)}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-700">Health / Medical:</span>
-                                <span class="text-gray-900 font-bold">${formatCurrency(proposedMedical)}</span>
+                                <span class="text-gray-700">Accidental:</span>
+                                <span class="text-gray-900 font-bold">${formatCurrency(proposedAccident)}</span>
                             </div>
                             <hr class="border-gray-300 my-4">
                             <div class="flex justify-between text-xl font-bold">
@@ -528,20 +528,20 @@
                     <h3 class="text-xl font-semibold text-gray-800 mb-4 text-center">Existing Coverage Breakdown</h3>
                     <div class="space-y-2 text-lg">
                         <div class="flex justify-between">
-                            <span class="text-gray-700">Life Insurance:</span>
-                            <span class="text-gray-900 font-bold">${formatCurrency(existingLife)}</span>
+                            <span class="text-gray-700">Health / Medical:</span>
+                            <span class="text-gray-900 font-bold">${formatCurrency(existingMedical)}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-700">Critical Illness:</span>
                             <span class="text-gray-900 font-bold">${formatCurrency(existingCI)}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-700">Accidental:</span>
-                            <span class="text-gray-900 font-bold">${formatCurrency(existingAccident)}</span>
+                            <span class="text-gray-700">Life Insurance:</span>
+                            <span class="text-gray-900 font-bold">${formatCurrency(existingLife)}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-700">Health / Medical:</span>
-                            <span class="text-gray-900 font-bold">${formatCurrency(existingMedical)}</span>
+                            <span class="text-gray-700">Accidental:</span>
+                            <span class="text-gray-900 font-bold">${formatCurrency(existingAccident)}</span>
                         </div>
                         <hr class="border-gray-300 my-4">
                         <div class="flex justify-between text-xl font-bold">
@@ -654,16 +654,16 @@
                         ${createLegend(isExistingCustomer)}
                         <div class="space-y-8">
                             <h3 class="text-xl font-medium text-gray-800">Existing Plan vs. Benchmarks</h3>
-                            ${createComparisonBlock('Life Coverage', lifeIcon, lifeBenchmark, existingLife, 0, false)}
-                            ${createComparisonBlock('CI Coverage', ciIcon, ciBenchmark, existingCI, 0, false)}
-                            ${createComparisonBlock('Accident Coverage', accidentIcon, accidentBenchmark, existingAccident, 0, false)}
                             ${createComparisonBlock('Medical Coverage', medicalIcon, medicalBenchmark, existingMedical, 0, false)}
+                            ${createComparisonBlock('CI Coverage', ciIcon, ciBenchmark, existingCI, 0, false)}
+                            ${createComparisonBlock('Life Coverage', lifeIcon, lifeBenchmark, existingLife, 0, false)}
+                            ${createComparisonBlock('Accident Coverage', accidentIcon, accidentBenchmark, existingAccident, 0, false)}
                             ${createExistingCoverageBreakdown(existingLife, existingCI, existingAccident, existingMedical, existingPremiumValue, existingPremiumFrequency)}
                             <h3 class="text-xl font-medium text-gray-800 mt-8 pt-4 border-t border-gray-200">Proposed Plan Impact vs. Benchmarks</h3>
-                            ${createComparisonBlock('Life Coverage (Total)', lifeIcon, lifeBenchmark, existingLife, proposedLife, true)}
-                            ${createComparisonBlock('CI Coverage (Total)', ciIcon, ciBenchmark, existingCI, proposedCI, true)}
-                            ${createComparisonBlock('Accident Coverage (Total)', accidentIcon, accidentBenchmark, existingAccident, proposedAccident, true)}
                             ${createComparisonBlock('Medical Coverage (Total)', medicalIcon, medicalBenchmark, existingMedical, proposedMedical, true)}
+                            ${createComparisonBlock('CI Coverage (Total)', ciIcon, ciBenchmark, existingCI, proposedCI, true)}
+                            ${createComparisonBlock('Life Coverage (Total)', lifeIcon, lifeBenchmark, existingLife, proposedLife, true)}
+                            ${createComparisonBlock('Accident Coverage (Total)', accidentIcon, accidentBenchmark, existingAccident, proposedAccident, true)}
                         </div>
                         <div class="mt-8 pt-4 border-t border-gray-200">
                              ${createSummarySection(proposedPremiumValue, proposedPremiumFrequency, proposedLife, proposedCI, proposedAccident, proposedMedical)}
@@ -683,10 +683,10 @@
                         ${createLegend(isExistingCustomer)}
                         <div class="space-y-8">
                             <h3 class="text-xl font-medium text-gray-800">Proposed Plan vs. Benchmarks</h3>
-                            ${createComparisonBlock('Life Coverage', lifeIcon, lifeBenchmark, 0, proposedLife, true)}
-                            ${createComparisonBlock('CI Coverage', ciIcon, ciBenchmark, 0, proposedCI, true)}
-                            ${createComparisonBlock('Accident Coverage', accidentIcon, accidentBenchmark, 0, proposedAccident, true)}
                             ${createComparisonBlock('Medical Coverage', medicalIcon, medicalBenchmark, 0, proposedMedical, true)}
+                            ${createComparisonBlock('CI Coverage', ciIcon, ciBenchmark, 0, proposedCI, true)}
+                            ${createComparisonBlock('Life Coverage', lifeIcon, lifeBenchmark, 0, proposedLife, true)}
+                            ${createComparisonBlock('Accident Coverage', accidentIcon, accidentBenchmark, 0, proposedAccident, true)}
                         </div>
                         <div class="mt-8 pt-4 border-t border-gray-200">
                             ${createSummarySection(proposedPremiumValue, proposedPremiumFrequency, proposedLife, proposedCI, proposedAccident, proposedMedical)}
